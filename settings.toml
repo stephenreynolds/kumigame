@@ -2,3 +2,5 @@
     width = 1440
     height = 810
     fullscreen = false
+    vSync = false
+    doubleBuffer = true
