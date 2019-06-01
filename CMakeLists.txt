@@ -101,6 +101,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     -DRELEASE_TYPE="internal"
+    -DVERSION_MAJOR=0
+    -DVERSION_MINOR=1
+    -DVERSION_PATCH=0
     -DGLFW_INCLUDE_NONE
 )
 
