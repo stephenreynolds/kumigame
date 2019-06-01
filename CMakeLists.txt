@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
 
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 1)
+set(VERSION_PATCH 0)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(OUTPUT_DEST "${CMAKE_BINARY_DIR}/kumigame")
 
-project(kumigame VERSION 0.0.1)
+project(kumigame VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Detect target OS
 if(WIN32)
@@ -24,7 +28,7 @@ if(MSVC)
     message(STATUS "Compiling with MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Ob0 /Zi")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Ob2 /DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /DNDEBUG")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -static-libgcc -static-libstdc++ -Wall -Wextra -isystem ${CMAKE_CURRENT_BINARY_DIR}/include")
     set(CMAKE_EXE_LINKER_FLAGS -lstdc++fs)
@@ -101,9 +105,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     -DRELEASE_TYPE="internal"
-    -DVERSION_MAJOR=0
-    -DVERSION_MINOR=1
-    -DVERSION_PATCH=0
+    -DVERSION_MAJOR=${VERSION_MAJOR}
+    -DVERSION_MINOR=${VERSION_MINOR}
+    -DVERSION_PATCH=${VERSION_PATCH}
     -DGLFW_INCLUDE_NONE
 )
 

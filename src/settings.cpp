@@ -20,6 +20,8 @@ void readSettings(Settings &settings, const char *filepath)
         settings.width = tomlSettings->get_qualified_as<int>("graphics.display.width").value_or(settings.width);
         settings.height = tomlSettings->get_qualified_as<int>("graphics.display.height").value_or(settings.height);
         settings.fullscreen = tomlSettings->get_qualified_as<bool>("graphics.display.fullscreen").value_or(settings.fullscreen);
+        settings.vSync = tomlSettings->get_qualified_as<bool>("graphics.display.vSync").value_or(settings.vSync);
+        settings.doubleBuffer = tomlSettings->get_qualified_as<bool>("graphics.display.doubleBuffer").value_or(settings.doubleBuffer);
     }
     catch (const std::exception &e)
     {

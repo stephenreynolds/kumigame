@@ -44,7 +44,7 @@ Result Game::init()
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -52,6 +52,7 @@ Result Game::init()
 #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
+    glfwWindowHint(GLFW_DOUBLEBUFFER, settings.doubleBuffer);
 
     glfwSetErrorCallback([](int error, const char* description) {
         LOG_ERROR("GLFW error (code {}): {}", error, description);
@@ -88,6 +89,8 @@ Result Game::init()
     });
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwSwapInterval(settings.vSync ? 1 : 0);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -168,5 +171,12 @@ void Game::draw()
 
     statsViewer->draw(VERSION.toLongString(), settings.width); // Draw stats last so it appears on top.
 
-    glfwSwapBuffers(window);
+    if (settings.doubleBuffer)
+    {
+        glfwSwapBuffers(window);
+    }
+    else
+    {
+        glFlush();
+    }
 }
