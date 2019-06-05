@@ -7,7 +7,7 @@ struct Settings
     int height = 720;
     bool fullscreen = false;
     bool vSync = false;
-    bool doubleBuffer = true;
+    float fov = 80.0f;
 };
 
 void readSettings(Settings &settings, const char *filepath);

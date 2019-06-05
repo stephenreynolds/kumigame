@@ -3,4 +3,4 @@
     height = 810
     fullscreen = false
     vSync = false
-    doubleBuffer = true
+    fov = 80.0
