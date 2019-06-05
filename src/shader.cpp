@@ -126,11 +126,6 @@ void Shader::loadFromFile(
         geomLoadText << "\n\t" << geometryShaderFile;
     }
 
-    LOG_DEBUG("Loading shaders:"
-              "\n\t{}"
-              "\n\t{}",
-        vertexShaderFile, fragmentShaderFile, geomLoadText.str());
-
     std::string vertexCode;
     std::string fragmentCode;
     std::string geometryCode;

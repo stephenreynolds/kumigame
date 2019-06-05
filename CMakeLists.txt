@@ -67,11 +67,13 @@ include_directories(
 )
 
 set(PROJECT_HEADERS
+    include/camera.hpp
     include/game.hpp
     include/result.hpp
     include/settings.hpp
     include/shader.hpp
     include/textRenderer.hpp
+    include/texture.hpp
     include/version.hpp
     include/debug/glDebug.hpp
     include/debug/log.hpp
@@ -81,11 +83,13 @@ set(PROJECT_HEADERS
 )
 
 set(PROJECT_SOURCES
-    src/main.cpp
+    src/camera.cpp
     src/game.cpp
+    src/main.cpp
     src/settings.cpp
     src/shader.cpp
     src/textRenderer.cpp
+    src/texture.cpp
     src/version.cpp
     src/debug/glDebug.cpp
     src/debug/log.cpp
@@ -123,6 +127,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 set(ASSET_DIRECTORIES
     fonts
     shaders
+    textures
 )
 
 foreach(ASSET_DIR ${ASSET_DIRECTORIES})

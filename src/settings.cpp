@@ -21,7 +21,7 @@ void readSettings(Settings &settings, const char *filepath)
         settings.height = tomlSettings->get_qualified_as<int>("graphics.display.height").value_or(settings.height);
         settings.fullscreen = tomlSettings->get_qualified_as<bool>("graphics.display.fullscreen").value_or(settings.fullscreen);
         settings.vSync = tomlSettings->get_qualified_as<bool>("graphics.display.vSync").value_or(settings.vSync);
-        settings.doubleBuffer = tomlSettings->get_qualified_as<bool>("graphics.display.doubleBuffer").value_or(settings.doubleBuffer);
+        settings.fov = static_cast<float>(tomlSettings->get_qualified_as<double>("graphics.display.fov").value_or(settings.fov));
     }
     catch (const std::exception &e)
     {

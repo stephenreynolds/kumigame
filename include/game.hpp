@@ -1,17 +1,22 @@
 #ifndef KUMIGAME_GAME_HPP
 #define KUMIGAME_GAME_HPP
 
+#include "camera.hpp"
 #include "result.hpp"
 #include "settings.hpp"
 #include "debug/statsViewer.hpp"
 #include "textRenderer.hpp"
+#include "texture.hpp"
 #include "version.hpp"
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <memory>
 
 class Game
 {
 public:
+    std::unique_ptr<Camera> camera;
+
     Game();
     ~Game();
 
@@ -24,14 +29,15 @@ private:
     Settings settings;
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<StatsViewer> statsViewer;
+
+    Texture2D* texture = nullptr;
     GLuint vao;
-    GLuint ebo;
 
     Result init();
     Result loadAssets();
-    void processInput();
-    void update();
-    void draw();
+    void processInput(float deltaTime);
+    void update(float deltaTime);
+    void draw(float deltaTime);
 };
 
 #endif
