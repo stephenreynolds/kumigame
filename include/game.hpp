@@ -2,42 +2,42 @@
 #define KUMIGAME_GAME_HPP
 
 #include "camera.hpp"
-#include "result.hpp"
 #include "settings.hpp"
-#include "debug/statsViewer.hpp"
-#include "textRenderer.hpp"
-#include "texture.hpp"
 #include "version.hpp"
+#include "debug/statsViewer.hpp"
+#include "renderer/textRenderer.hpp"
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <memory>
+#include <optional>
+#include <renderer/texture.hpp>
 
 class Game
 {
 public:
-    std::unique_ptr<Camera> camera;
-
     Game();
+
     ~Game();
 
-    Result run();
+    std::optional<std::string> run();
 
 private:
-    const char* TITLE = "kumigame";
-    const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
-    GLFWwindow* window = nullptr;
+    const char *TITLE = "kumigame";
+    const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH); // VERSION_X defined at compile-time.
+    GLFWwindow *window = nullptr;
     Settings settings;
+    std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<StatsViewer> statsViewer;
+    std::unique_ptr<Shader> spriteShader;
+    unsigned int vao = 0;
+    unsigned int vbo = 0;
+    std::unique_ptr<Texture2D> texture1;
+    std::unique_ptr<Texture2D> texture2;
 
-    Texture2D* texture = nullptr;
-    GLuint vao;
-
-    Result init();
-    Result loadAssets();
+    std::optional<std::string> init();
+    std::optional<std::string> loadAssets();
     void processInput(float deltaTime);
-    void update(float deltaTime);
-    void draw(float deltaTime);
+    void update();
+    void draw();
 };
 
-#endif
+#endif //KUMIGAME_GAME_HPP

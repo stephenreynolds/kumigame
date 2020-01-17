@@ -1,6 +1,5 @@
-#include "debug/log.hpp"
 #include "game.hpp"
-#include "result.hpp"
+#include "debug/log.hpp"
 
 int main()
 {
@@ -12,13 +11,11 @@ int main()
 
     Game* game = new Game();
 
-    Result result = game->run();
-
-    if (result != RESULT_SUCCESS)
+    if (auto result = game->run())
     {
-        LOG_CRITICAL("The game exited due to an error.");
-        return EXIT_FAILURE;
+        LOG_CRITICAL("The game exited due to an error: {}", result.value());
+        return -1;
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }

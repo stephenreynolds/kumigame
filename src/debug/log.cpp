@@ -1,4 +1,4 @@
-#include "debug/log.hpp"
+#include "../../include/debug/log.hpp"
 #include <filesystem>
 #include <memory>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -7,7 +7,13 @@
 #include <string>
 #include <vector>
 
-void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel)
+#ifndef NDEBUG
+#include <spdlog/sinks/msvc_sink.h>
+#endif
+
+void createLogger(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, const char* filename);
+
+void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, unsigned short int keepNumLogs)
 {
     // Keep list of errors that occur while initializing log.
     std::vector<std::string> errors;
@@ -16,21 +22,38 @@ void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum f
     std::filesystem::create_directory("logs");
 
     // Rename old log files, keeping the previous three.
-    std::string filename = "logs/game.3.log";
-    if (std::filesystem::exists(filename) && std::remove(filename.c_str()))
+    std::string fileName = fmt::format("logs/game.{}.log", keepNumLogs);
+    if (std::filesystem::exists(fileName) && std::remove(fileName.c_str()))
     {
-        errors.push_back("Could not remove " + filename + ".");
+        errors.push_back(fmt::format("Could not remove {}.", fileName));
     }
-    for (int i = 2; i >= 0; --i)
+
+    for (int i = keepNumLogs - 1; i >= 0; --i)
     {
-        filename = "logs/game." + std::to_string(i) + ".log";
-        std::string newfile = "logs/game." + std::to_string(i + 1) + ".log";
-        if (std::rename(filename.c_str(), newfile.c_str()) && std::filesystem::exists(filename))
+        fileName = fmt::format("logs/game.{}.log", std::to_string(i));
+        std::string newFile = fmt::format("logs/game.{}.log", std::to_string(i + 1));
+        if (std::rename(fileName.c_str(), newFile.c_str()) && std::filesystem::exists(fileName))
         {
-            errors.push_back("Failed to rename " + filename + " to " + newfile + ".");
+            errors.push_back(fmt::format("Failed to rename {} to {}.", fileName, newFile));
         }
     }
 
+    createLogger(consoleLevel, fileLevel, fileName.c_str());
+
+    for (const std::string& error : errors)
+    {
+        LOG_ERROR(error);
+    }
+}
+
+void changeLogLevels(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel)
+{
+    spdlog::drop("logger");
+    createLogger(consoleLevel, fileLevel, "logs/game.0.log");
+}
+
+void createLogger(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, const char* filename)
+{
     // Create console log sink.
     auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     consoleSink->set_level(consoleLevel);
@@ -39,7 +62,13 @@ void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum f
     // Create file log sink.
     auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, true);
     fileSink->set_level(fileLevel);
-    fileSink->set_pattern("[%Y-%m-%d %I:%M:%S.%e %p] [%^%l%$] %v");
+    fileSink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+
+    // Create MSVC debug sink.
+#ifndef NDEBUG
+    auto msvcSink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+    msvcSink->set_level(LOG_LEVEL_DEBUG);
+#endif
 
     // Register console and file sinks to "logger".
     std::vector<spdlog::sink_ptr> sinks;
@@ -48,9 +77,4 @@ void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum f
     auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
     logger->set_level(spdlog::level::debug);
     spdlog::register_logger(logger);
-
-    for (std::string error : errors)
-    {
-        LOG_ERROR(error);
-    }
 }
