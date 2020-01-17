@@ -42,4 +42,4 @@ private:
     uint32_t version;
 };
 
-#endif
+#endif //KUMIGAME_VERSION_HPP

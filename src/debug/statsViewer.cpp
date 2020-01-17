@@ -1,13 +1,15 @@
-#include "debug/statsViewer.hpp"
-#include "input/keyboard.hpp"
-#include <glfw/glfw3.h>
+#include "../../include/debug/statsViewer.hpp"
+#include "../../include/input/keyboard.hpp"
 #include <glm/glm.hpp>
-#include <iomanip>
 #include <memory>
 #include <sstream>
+#include <utility>
+#include <fmt/format.h>
 
-StatsViewer::StatsViewer(std::shared_ptr<TextRenderer> textRenderer, glm::vec2 position)
-    : position(position), renderer(textRenderer), lastTime(glfwGetTime())
+StatsViewer::StatsViewer(std::shared_ptr<TextRenderer>& textRenderer,
+                         glm::vec2 position, float sampleTime)
+    : position(position), sampleTime(sampleTime),
+    renderer(textRenderer), lastTime(static_cast<float>(glfwGetTime()))
 {
 }
 
@@ -16,7 +18,7 @@ void StatsViewer::loadAssets()
     renderer->load("assets/fonts/OCRAEXT.TTF", 14);
 }
 
-void StatsViewer::processInput(GLFWwindow* window)
+void StatsViewer::processInput()
 {
     // Toggle stats visibility.
     if (Keyboard::once(GLFW_KEY_F3))
@@ -46,15 +48,15 @@ void StatsViewer::processInput(GLFWwindow* window)
 
 void StatsViewer::update()
 {
-    double currentTime = glfwGetTime();
+    double currentTime = static_cast<float>(glfwGetTime());
     frames++;
-    if (currentTime - lastTime >= 0.1)
+    if (currentTime - lastTime >= sampleTime)
     {
-        ms = 100.0 / frames;
-        fps = 1000.0 / ms;
+        ms = 100.0f / static_cast<float>(frames);
+        fps = 1000.0f / ms;
 
         frames = 0;
-        lastTime += 0.1;
+        lastTime += sampleTime;
     }
 }
 
@@ -69,10 +71,8 @@ void StatsViewer::draw(const std::string& version, int frameWidth)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw FPS and ms/frame.
-        std::ostringstream out;
-        out.precision(2);
-        out << std::fixed << fps << " (" << ms << "ms)";
-        renderer->draw(out.str(), glm::vec2(position.x, position.y), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
+        auto out = fmt::format("{0:.0f} ({1:.2f}ms)", fps, ms);
+        renderer->draw(out, glm::vec2(position.x, position.y), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
 
         // Draw version.
         renderer->draw(version, glm::vec2(frameWidth - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), true);

@@ -18,6 +18,9 @@
 #define LOG_LEVEL_CRITICAL spdlog::level::critical
 
 void initLog(spdlog::level::level_enum consoleLevel = spdlog::level::warn,
-    spdlog::level::level_enum fileLevel = spdlog::level::info);
+             spdlog::level::level_enum fileLevel = spdlog::level::info,
+             unsigned short int keepNumLogs = 3);
 
-#endif
+void changeLogLevels(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel);
+
+#endif //KUMIGAME_DEBUG_LOG_HPP

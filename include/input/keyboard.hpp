@@ -1,8 +1,8 @@
 #ifndef KUMIGAME_INPUT_KEYBOARD_HPP
 #define KUMIGAME_INPUT_KEYBOARD_HPP
 
-#include "input/keyState.hpp"
-#include <glfw/glfw3.h>
+#include "keyState.hpp"
+#include <GLFW/glfw3.h>
 #include <map>
 
 class Keyboard

@@ -2,4 +2,4 @@
 // This file lists errors to suppress when analyzing with cppcheck. //
 //////////////////////////////////////////////////////////////////////
 
-unusedScopedObject:src/game.cpp
+//unusedScopedObject:src/game.cpp
