@@ -1,13 +1,11 @@
-# kumigame
+# R*bert
 
-## Dependencies
-
-- Assimp 5.0.0.rc1
-- cpptoml 0.1.1
-- fmt 5.3.0
-- Freetype 2.10.0
-- glad (OpenGL 4.3 core)
-- GLFW 3.3
-- GLM 0.9.5
-- spdlog 1.3.1
-- stb_image
+An open source Q*bert clone, complete with:
+- Ray tracing.
+- Support for Vulkan, DirectX 12, and modern OpenGL.
+- Pre-made and procedurally generated levels.
+- Loot crates.
+- Online multiplayer.
+- Battle royale.
+- Mod support.
+- New funky mode.

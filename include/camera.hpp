@@ -1,40 +1,52 @@
 #ifndef KUMIGAME_CAMERA_HPP
 #define KUMIGAME_CAMERA_HPP
 
-#include "direction.hpp"
 #include <glm/glm.hpp>
+
+enum CameraDirection
+{
+    Forward,
+    Backward,
+    Left,
+    Right,
+    Up,
+    Down
+};
 
 class Camera
 {
 public:
+    const float DEFAULT_MOVEMENT_SPEED = 2.5f;
+    const float DEFAULT_MOUSE_SENSITIVITY = 0.1f;
+    const float DEFAULT_FOV = 45.0f;
+
     glm::vec3 position;
-    glm::vec3 front;
+    glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 up;
     glm::vec3 worldUp;
+    glm::vec3 right;
+
     float lastX = 0.0f;
     float lastY = 0.0f;
     float yaw = -90.0f;
     float pitch = 0.0f;
-    float fov = 45.0f;
-    float sensitivity = 0.05f;
-    float movementSpeed = 5.0f;
+    float movementSpeed = DEFAULT_MOVEMENT_SPEED;
+    float mouseSensitivity = DEFAULT_MOUSE_SENSITIVITY;
+    float fov = DEFAULT_FOV;
+    float maxFOV = DEFAULT_FOV;
+    bool firstMouse = true;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f),
-           glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f),
-           glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f));
+    explicit Camera(glm::vec3 position = glm::vec3(0.0f),
+                    glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f),
+                    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 getViewMatrix();
-
-    void processKeyboard(Direction direction, float deltaTime);
+    void processKeyboard(CameraDirection direction, float deltaTime);
     void processMouseMovement(double xPos, double yPos, bool constrainPitch = true);
-    void processMouseScroll(double yOffset);
-
-    void setMaxFOV(float maxFOV);
+    void processMouseScroll(float yOffset);
 
 private:
-    float maxFOV = 45.0f;
-
-    void updateFront();
+    void updateCameraVectors();
 };
 
-#endif
+#endif //KUMIGAME_CAMERA_HPP
