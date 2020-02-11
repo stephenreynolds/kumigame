@@ -1,7 +1,7 @@
 #ifndef KUMIGAME_DEBUG_STATS_VIEWER_HPP
 #define KUMIGAME_DEBUG_STATS_VIEWER_HPP
 
-#include "../renderer/textRenderer.hpp"
+#include "renderer/textRenderer.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <memory>
@@ -16,10 +16,9 @@ public:
 
     StatsViewer(std::shared_ptr<TextRenderer>& textRenderer, glm::vec2 position, float sampleTime = 0.1f);
 
-    void loadAssets();
     void processInput();
     void update();
-    void draw(const std::string& version, int frameWidth);
+    void render(const std::string& version, int frameWidth);
 
 private:
     std::shared_ptr<TextRenderer> renderer;
@@ -27,6 +26,9 @@ private:
     float fps = 0;
     float ms = 0;
     float lastTime;
+
+    void toggleHidden();
+    void togglePolygonMode();
 };
 
-#endif
+#endif //KUMIGAME_DEBUG_STATS_VIEWER_HPP

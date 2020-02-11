@@ -1,6 +1,7 @@
 #include "../../include/debug/log.hpp"
 #include <filesystem>
 #include <memory>
+#include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -11,6 +12,7 @@
 #include <spdlog/sinks/msvc_sink.h>
 #endif
 
+std::string createLogFiles(std::vector<std::string>& errors, unsigned short int keepNumLogs);
 void createLogger(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, const char* filename);
 
 void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, unsigned short int keepNumLogs)
@@ -18,6 +20,27 @@ void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum f
     // Keep list of errors that occur while initializing log.
     std::vector<std::string> errors;
 
+    // Create log file and keep previous three.
+    std::string fileName = createLogFiles(errors, keepNumLogs);
+
+    // Initialize the logger.
+    createLogger(consoleLevel, fileLevel, fileName.c_str());
+
+    // Log any errors that may have occurred while initializing log.
+    for (const std::string& error : errors)
+    {
+        LOG_ERROR(error);
+    }
+}
+
+void changeLogLevels(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel)
+{
+    spdlog::drop("logger");
+    createLogger(consoleLevel, fileLevel, "logs/game.0.log");
+}
+
+std::string createLogFiles(std::vector<std::string>& errors, unsigned short int keepNumLogs)
+{
     // Make sure logs/ directory exists.
     std::filesystem::create_directory("logs");
 
@@ -38,18 +61,7 @@ void initLog(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum f
         }
     }
 
-    createLogger(consoleLevel, fileLevel, fileName.c_str());
-
-    for (const std::string& error : errors)
-    {
-        LOG_ERROR(error);
-    }
-}
-
-void changeLogLevels(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel)
-{
-    spdlog::drop("logger");
-    createLogger(consoleLevel, fileLevel, "logs/game.0.log");
+    return fileName;
 }
 
 void createLogger(spdlog::level::level_enum consoleLevel, spdlog::level::level_enum fileLevel, const char* filename)

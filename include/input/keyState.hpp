@@ -3,6 +3,8 @@
 
 typedef int GLFW_KEY;
 typedef int GLFW_KEY_STATE;
+typedef int GLFW_KEY_ACTION;
+typedef int GLFW_KEY_MODS;
 
 class KeyState
 {

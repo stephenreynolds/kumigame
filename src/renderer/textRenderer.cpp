@@ -1,20 +1,22 @@
 #include "renderer/textRenderer.hpp"
-#include "debug/log.hpp"
 #include "renderer/shader.hpp"
-#include <glad/glad.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <glm/glm.hpp>
+#include "debug/log.hpp"
 #include <glm/gtc/matrix_transform.hpp>
-#include <memory>
-#include <string>
 
-TextRenderer::TextRenderer(GLuint width, GLuint height, std::shared_ptr<Shader>& shader) : textShader(shader)
+TextRenderer::TextRenderer(GLuint width, GLuint height, std::shared_ptr<Shader> &shader, const std::string& fontPath, GLuint fontSize)
 {
-    textShader->use();
-    textShader->setMatrix4(
-            "projection", glm::ortho(0.0f, static_cast<GLfloat>(width), static_cast<GLfloat>(height), 0.0f));
-    textShader->setInteger("text", 0);
+    initRenderDescriptor(width, height, shader);
+    loadFont(fontPath, fontSize);
+}
+
+void TextRenderer::initRenderDescriptor(GLuint width, GLuint height, std::shared_ptr<Shader> &textShader)
+{
+    shader = textShader;
+
+    shader->use();
+    shader->setMatrix4(
+        "projection", glm::ortho(0.0f, static_cast<GLfloat>(width), static_cast<GLfloat>(height), 0.0f));
+    shader->setInteger("text", 0);
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -23,18 +25,9 @@ TextRenderer::TextRenderer(GLuint width, GLuint height, std::shared_ptr<Shader>&
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 
-TextRenderer::~TextRenderer()
-{
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-void TextRenderer::load(std::string font, GLuint fontSize)
+void TextRenderer::loadFont(const std::string& fontPath, GLuint fontSize)
 {
     characters.clear();
 
@@ -45,7 +38,7 @@ void TextRenderer::load(std::string font, GLuint fontSize)
     }
 
     FT_Face face;
-    if (FT_New_Face(ft, font.c_str(), 0, &face))
+    if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
     {
         LOG_ERROR("FreeType: Failed to load font!");
     }
@@ -73,51 +66,62 @@ void TextRenderer::load(std::string font, GLuint fontSize)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         Character character = {
-                texture,
-                glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-                face->glyph->advance.x
+            texture,
+            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            face->glyph->advance.x
         };
 
         characters.insert(std::pair<GLchar, Character>(c, character));
     }
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 }
 
-void TextRenderer::draw(std::string text, glm::vec2 position, GLfloat scale, glm::vec4 color, bool rightToLeft)
+void TextRenderer::render(std::string text, glm::vec2 position, GLfloat scale, glm::vec4 color, bool rightToLeft)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    textShader->use();
-    textShader->setVector4f("textColor", color);
+    shader->use();
+    shader->setVector4f("textColor", color);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
+    float lineHeight = characters['H'].size.y;
+    float xStart = position.x;
+
     if (rightToLeft)
     {
+        auto newLineCount = std::count(text.begin(), text.end(), '\n');
+        position.y += newLineCount * lineHeight * scale * 2.0f;
+
         for (auto c = text.rbegin(); c != text.rend(); ++c)
         {
             Character ch = characters[*c];
 
+            if (*c == '\n')
+            {
+                position.x = xStart;
+                position.y -= lineHeight * scale * 2.0f;
+                continue;
+            }
+
             GLfloat xpos = position.x + ch.bearing.x * scale;
-            GLfloat ypos = position.y + (characters['H'].bearing.y - ch.bearing.y) * scale;
+            GLfloat ypos = position.y + static_cast<float>(lineHeight - ch.bearing.y) * scale;
 
             GLfloat w = ch.size.x * scale;
             GLfloat h = ch.size.y * scale;
 
             GLfloat vertices[6][4] = {
-                    { xpos, ypos + h, 0.0f, 1.0f },
-                    { xpos + w, ypos, 1.0f, 0.0f },
-                    { xpos, ypos, 0.0f, 0.0f },
+                { xpos, ypos + h, 0.0f, 1.0f },
+                { xpos + w, ypos, 1.0f, 0.0f },
+                { xpos, ypos, 0.0f, 0.0f },
 
-                    { xpos, ypos + h, 0.0f, 1.0f },
-                    { xpos + w, ypos + h, 1.0f, 1.0f },
-                    { xpos + w, ypos, 1.0f, 0.0f }
+                { xpos, ypos + h, 0.0f, 1.0f },
+                { xpos + w, ypos + h, 1.0f, 1.0f },
+                { xpos + w, ypos, 1.0f, 0.0f }
             };
 
             glBindTexture(GL_TEXTURE_2D, ch.textureID);
@@ -136,20 +140,27 @@ void TextRenderer::draw(std::string text, glm::vec2 position, GLfloat scale, glm
         {
             Character ch = characters[*c];
 
+            if (*c == '\n')
+            {
+                position.x = xStart;
+                position.y += lineHeight * scale * 2.0f;
+                continue;
+            }
+
             GLfloat xpos = position.x + ch.bearing.x * scale;
-            GLfloat ypos = position.y + (characters['H'].bearing.y - ch.bearing.y) * scale;
+            GLfloat ypos = position.y + static_cast<float>(lineHeight - ch.bearing.y) * scale;
 
             GLfloat w = ch.size.x * scale;
             GLfloat h = ch.size.y * scale;
 
             GLfloat vertices[6][4] = {
-                    { xpos, ypos + h, 0.0f, 1.0f },
-                    { xpos + w, ypos, 1.0f, 0.0f },
-                    { xpos, ypos, 0.0f, 0.0f },
+                { xpos, ypos + h, 0.0f, 1.0f },
+                { xpos + w, ypos, 1.0f, 0.0f },
+                { xpos, ypos, 0.0f, 0.0f },
 
-                    { xpos, ypos + h, 0.0f, 1.0f },
-                    { xpos + w, ypos + h, 1.0f, 1.0f },
-                    { xpos + w, ypos, 1.0f, 0.0f }
+                { xpos, ypos + h, 0.0f, 1.0f },
+                { xpos + w, ypos + h, 1.0f, 1.0f },
+                { xpos + w, ypos, 1.0f, 0.0f }
             };
 
             glBindTexture(GL_TEXTURE_2D, ch.textureID);
@@ -163,7 +174,6 @@ void TextRenderer::draw(std::string text, glm::vec2 position, GLfloat scale, glm
         }
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
     glDisable(GL_BLEND);

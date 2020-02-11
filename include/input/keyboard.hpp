@@ -3,11 +3,19 @@
 
 #include "keyState.hpp"
 #include <GLFW/glfw3.h>
+#include <functional>
 #include <map>
+#include <vector>
 
 class Keyboard
 {
 public:
+    static void addKeyBinding(const std::function<void()>& callback, GLFW_KEY key, GLFW_KEY_ACTION action, GLFW_KEY_MODS mods = 0);
+    static void onKeyEvent(GLFW_KEY key, GLFW_KEY_ACTION action, GLFW_KEY_MODS mods);
+
+    static void addCharBinding(const std::function<void()>& callback, unsigned int codePoint);
+    static void onCharEvent(unsigned int codePoint);
+
     // @brief Sets a key's current state.
     static void set(GLFW_KEY key, GLFW_KEY_STATE keyState);
     // @brief Returns the current state of a key.
@@ -23,6 +31,8 @@ public:
 
 private:
     static std::map<GLFW_KEY, KeyState> keyStates;
+    static std::map<GLFW_KEY, std::map<GLFW_KEY_ACTION, std::map<GLFW_KEY_MODS, std::vector<std::function<void()>>>>> keyCallbacks;
+    static std::map<unsigned int, std::vector<std::function<void()>>> charCallbacks;
 };
 
 #endif

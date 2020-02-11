@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include "input/keyboard.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -80,7 +81,7 @@ void Camera::processMouseMovement(double xPos, double yPos, bool constrainPitch)
 
 void Camera::processMouseScroll(float yOffset)
 {
-    if (fov > 1.0f && fov < maxFOV)
+    if (fov >= 1.0f && fov <= maxFOV)
     {
         fov -= yOffset;
     }

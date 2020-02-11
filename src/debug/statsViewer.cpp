@@ -1,48 +1,52 @@
-#include "../../include/debug/statsViewer.hpp"
-#include "../../include/input/keyboard.hpp"
+#include "debug/statsViewer.hpp"
+#include "debug/debugConsole.hpp"
+#include "input/keyboard.hpp"
 #include <glm/glm.hpp>
 #include <memory>
-#include <sstream>
-#include <utility>
 #include <fmt/format.h>
 
-StatsViewer::StatsViewer(std::shared_ptr<TextRenderer>& textRenderer,
-                         glm::vec2 position, float sampleTime)
+StatsViewer::StatsViewer(std::shared_ptr<TextRenderer>& textRenderer, glm::vec2 position, float sampleTime)
     : position(position), sampleTime(sampleTime),
-    renderer(textRenderer), lastTime(static_cast<float>(glfwGetTime()))
+      renderer(textRenderer), lastTime(static_cast<float>(glfwGetTime()))
 {
-}
+    // Toggle stats visibility.
+    Keyboard::addKeyBinding([this]() {
+        toggleHidden();
+    }, GLFW_KEY_F3, GLFW_RELEASE);
 
-void StatsViewer::loadAssets()
-{
-    renderer->load("assets/fonts/OCRAEXT.TTF", 14);
+    // Toggle polygon mode (wireframe -> point -> fill).
+    Keyboard::addKeyBinding([this]() {
+        togglePolygonMode();
+    }, GLFW_KEY_F4, GLFW_RELEASE);
 }
 
 void StatsViewer::processInput()
 {
-    // Toggle stats visibility.
-    if (Keyboard::once(GLFW_KEY_F3))
+    if (!DebugConsole::commandProcessed)
     {
-        hidden = !hidden;
-    }
-
-    // Toggle polygon mode (wireframe -> point -> fill).
-    if (!hidden && Keyboard::once(GLFW_KEY_F4))
-    {
-        int polygonMode;
-        glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
-        switch (polygonMode)
+        if (DebugConsole::command == "toggle stats")
         {
-            case GL_FILL:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                break;
-            case GL_LINE:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-                break;
-            default:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                break;
+            toggleHidden();
         }
+        else if (DebugConsole::command == "toggle line" || DebugConsole::command == "toggle wireframe")
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else if (DebugConsole::command == "toggle point")
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+        }
+        else if (DebugConsole::command == "toggle fill")
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        else
+        {
+            // No match, do nothing.
+            return;
+        }
+
+        DebugConsole::commandProcessed = true;
     }
 }
 
@@ -60,23 +64,54 @@ void StatsViewer::update()
     }
 }
 
-void StatsViewer::draw(const std::string& version, int frameWidth)
+void StatsViewer::render(const std::string& version, int frameWidth)
 {
     // Update every one second.
     if (!hidden)
     {
+        glDisable(GL_DEPTH_TEST); // Keep text on top.
+
         // Prevent text from being drawn as wireframe/points.
         int polygonMode;
         glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw FPS and ms/frame.
-        auto out = fmt::format("{0:.0f} ({1:.2f}ms)", fps, ms);
-        renderer->draw(out, glm::vec2(position.x, position.y), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
+        auto out = fmt::format("{0:.0f} ({1:.2f}ms)\n{2}", fps, ms, glGetString(GL_RENDERER));
+        renderer->render(out, glm::vec2(position.x, position.y), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
 
         // Draw version.
-        renderer->draw(version, glm::vec2(frameWidth - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), true);
+        out = fmt::format("{}\nOpenGL {}.{}", version, GLVersion.major, GLVersion.minor);
+        renderer->render(out, glm::vec2(frameWidth - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), true);
 
         glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
+        glEnable(GL_DEPTH_TEST); // Restore depth testing.
+    }
+}
+
+void StatsViewer::toggleHidden()
+{
+    hidden = !hidden;
+}
+
+
+void StatsViewer::togglePolygonMode()
+{
+    if (!hidden)
+    {
+        int polygonMode;
+        glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+        switch (polygonMode)
+        {
+            case GL_FILL:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                break;
+            case GL_LINE:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+                break;
+            default:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                break;
+        }
     }
 }

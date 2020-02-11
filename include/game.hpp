@@ -4,7 +4,9 @@
 #include "camera.hpp"
 #include "settings.hpp"
 #include "version.hpp"
+#include "debug/debugConsole.hpp"
 #include "debug/statsViewer.hpp"
+#include "renderer/model.hpp"
 #include "renderer/textRenderer.hpp"
 #include <GLFW/glfw3.h>
 #include <optional>
@@ -13,7 +15,7 @@
 class Game
 {
 public:
-    Game();
+    Game() = default;
 
     ~Game();
 
@@ -26,12 +28,11 @@ private:
     Settings settings;
     std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;
+    std::unique_ptr<DebugConsole> debugConsole;
     std::unique_ptr<StatsViewer> statsViewer;
-    std::unique_ptr<Shader> spriteShader;
-    unsigned int vao = 0;
-    unsigned int vbo = 0;
-    std::unique_ptr<Texture2D> texture1;
-    std::unique_ptr<Texture2D> texture2;
+    std::shared_ptr<Shader> meshShader;
+    std::unique_ptr<Model> nanosuit;
+    std::unique_ptr<Model> cube;
 
     std::optional<std::string> init();
     std::optional<std::string> loadAssets();

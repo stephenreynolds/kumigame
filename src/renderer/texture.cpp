@@ -7,6 +7,11 @@ Texture2D::Texture2D() :
     glGenTextures(1, &id);
 }
 
+Texture2D::~Texture2D()
+{
+    glDeleteTextures(1, &id);
+}
+
 void Texture2D::generate(GLuint width, GLuint height, unsigned char* data)
 {
     this->width = width;
