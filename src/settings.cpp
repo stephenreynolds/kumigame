@@ -54,3 +54,36 @@ void readSettings(Settings &settings, const char *filepath)
         LOG_ERROR("Failed to load settings from {}: {}", filepath, e.what());
     }
 }
+
+void saveSettings(Settings &settings, const char *filepath)
+{
+    auto root = cpptoml::make_table();
+
+    // graphics.display
+    auto graphics = cpptoml::make_table();
+    auto graphicsDisplay = cpptoml::make_table();
+
+    graphicsDisplay->insert("width", settings.width);
+    graphicsDisplay->insert("height", settings.height);
+    graphicsDisplay->insert("fullscreen", settings.fullscreen);
+    graphicsDisplay->insert("vSync", settings.vSync);
+    graphicsDisplay->insert("fov", settings.fov);
+
+    graphics->insert("display", graphicsDisplay);
+    root->insert("graphics", graphics);
+
+    // log.level
+    auto log = cpptoml::make_table();
+    auto logLevel = cpptoml::make_table();
+
+    logLevel->insert("console", static_cast<int>(settings.consoleLogLevel));
+    logLevel->insert("file", static_cast<int>(settings.fileLogLevel));
+
+    log->insert("level", logLevel);
+    root->insert("log", log);
+
+    // Output to file.
+    std::ofstream file(filepath);
+    file << (*root);
+    file.close();
+}

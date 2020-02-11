@@ -24,29 +24,32 @@ void StatsViewer::processInput()
 {
     if (!DebugConsole::commandProcessed)
     {
-        if (DebugConsole::command == "toggle stats")
+        if (DebugConsole::command.size() == 2)
         {
-            toggleHidden();
+            if (DebugConsole::command[0] == "toggle")
+            {
+                if (DebugConsole::command[1] == "stats")
+                {
+                    toggleHidden();
+                    DebugConsole::commandProcessed = true;
+                }
+                else if (DebugConsole::command[1] == "line" || DebugConsole::command[1] == "wireframe")
+                {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    DebugConsole::commandProcessed = true;
+                }
+                else if (DebugConsole::command[1] == "point")
+                {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+                    DebugConsole::commandProcessed = true;
+                }
+                else if (DebugConsole::command[1] == "fill")
+                {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    DebugConsole::commandProcessed = true;
+                }
+            }
         }
-        else if (DebugConsole::command == "toggle line" || DebugConsole::command == "toggle wireframe")
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        else if (DebugConsole::command == "toggle point")
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-        }
-        else if (DebugConsole::command == "toggle fill")
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        else
-        {
-            // No match, do nothing.
-            return;
-        }
-
-        DebugConsole::commandProcessed = true;
     }
 }
 

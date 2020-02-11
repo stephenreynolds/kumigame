@@ -7,18 +7,21 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <vector>
 
 class DebugConsole
 {
 public:
-    static std::string command;
+    static std::vector<std::string> command;
     static bool commandProcessed;
+    static std::string response;
 
     glm::vec2 position;
     bool hidden = true;
 
     DebugConsole(std::shared_ptr<TextRenderer>& textRenderer, glm::vec2 position, GLFWwindow* window);
 
+    void update();
     void render(glm::vec3 textColor = glm::vec3(0.0f));
 
 private:

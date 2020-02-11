@@ -22,9 +22,12 @@ public:
     std::optional<std::string> run();
 
 private:
-    const char *TITLE = "kumigame";
+    const char* TITLE = "kumigame";
     const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH); // VERSION_X defined at compile-time.
+    const char* SETTINGS_PATH = "settings.toml";
     GLFWwindow *window = nullptr;
+    glm::ivec2 windowPos;
+    glm::ivec2 windowSize;
     Settings settings;
     std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;

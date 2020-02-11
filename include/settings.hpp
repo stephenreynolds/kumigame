@@ -17,6 +17,8 @@ struct Settings
     spdlog::level::level_enum fileLogLevel = spdlog::level::warn;
 };
 
-void readSettings(Settings &settings, const char *filepath);
+void readSettings(Settings &settings, const char* filepath);
+
+void saveSettings(Settings &settings, const char* filepath);
 
 #endif //KUMIGAME_SETTINGS_HPP

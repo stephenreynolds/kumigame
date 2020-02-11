@@ -44,11 +44,12 @@ std::optional<std::string> Game::run()
 
 std::optional<std::string> Game::init()
 {
-    readSettings(settings, "settings.toml");
+    readSettings(settings, SETTINGS_PATH);
     changeLogLevels(settings.consoleLogLevel, settings.fileLogLevel);
 
     LOG_INFO("Version {}", VERSION.toLongString());
 
+    // Initialize GLFW.
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -65,6 +66,7 @@ std::optional<std::string> Game::init()
         LOG_ERROR("GLFW error (code {}): {}", error, description);
     });
 
+    // Create window.
     window = glfwCreateWindow(settings.width, settings.height, TITLE, nullptr, nullptr);
     if (!window)
     {
@@ -74,6 +76,10 @@ std::optional<std::string> Game::init()
     }
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
+
+    // Save window position and size.
+    glfwGetWindowPos(window, &windowPos.x, &windowPos.y);
+    glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
 
     // Set window icon.
     int width, height, numComponents;
@@ -170,17 +176,105 @@ void Game::processInput(float deltaTime)
 
     Keyboard::processKeys(window);
 
+    // Process console commands.
+    if (!(DebugConsole::commandProcessed || DebugConsole::command.empty()))
+    {
+        if (DebugConsole::command.size() == 2)
+        {
+            if ((DebugConsole::command[0] == "exit" || DebugConsole::command[0] == "close") && DebugConsole::command[1] == "game")
+            {
+                glfwSetWindowShouldClose(window, true);
+                DebugConsole::commandProcessed = true;
+            }
+            else if (DebugConsole::command[0] == "settings" && DebugConsole::command[1] == "save")
+            {
+                saveSettings(settings, SETTINGS_PATH);
+                DebugConsole::commandProcessed = true;
+            }
+        }
+        else if (DebugConsole::command.size() == 3)
+        {
+            if (DebugConsole::command[0] == "set")
+            {
+                if (DebugConsole::command[1] == "fullscreen")
+                {
+                    if (DebugConsole::command[2] == "true")
+                    {
+                        settings.fullscreen = true;
+                        glfwGetWindowPos(window, &windowPos.x, &windowPos.y);
+                        glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
+                        const auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+                        glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 0);
+                        DebugConsole::commandProcessed = true;
+                    }
+                    else if (DebugConsole::command[2] == "false")
+                    {
+                        settings.fullscreen = false;
+                        glfwSetWindowMonitor(window, nullptr, windowPos.x, windowPos.y, windowSize.x, windowSize.y, 0);
+                        DebugConsole::commandProcessed = true;
+                    }
+                }
+                else if (DebugConsole::command[2] == "fov")
+                {
+                    try
+                    {
+                        float fov = std::stof(DebugConsole::command[3]);
+                        camera->fov = fov;
+                        settings.fov = fov;
+                    }
+                    catch (std::invalid_argument& ex)
+                    {
+                        DebugConsole::response = "Invalid argument: must be of type float.";
+                    }
+
+                    DebugConsole::commandProcessed = true;
+                }
+                else if (DebugConsole::command[2] == "vsync")
+                {
+                    if (DebugConsole::command[3] == "true")
+                    {
+                        glfwSwapInterval(1);
+                        settings.vSync = true;
+                    }
+                    else if (DebugConsole::command[3] == "false")
+                    {
+                        glfwSwapInterval(0);
+                        settings.vSync = false;
+                    }
+
+                    DebugConsole::commandProcessed = true;
+                }
+            }
+        }
+        else if (DebugConsole::command.size() == 4)
+        {
+            if (DebugConsole::command[0] == "set")
+            {
+                if (DebugConsole::command[1] == "window")
+                {
+                    try
+                    {
+                        int width = std::stoi(DebugConsole::command[2]);
+                        int height = std::stoi(DebugConsole::command[3]);
+                        glfwSetWindowSize(window, width, height);
+                        settings.width = width;
+                        settings.height = height;
+                    }
+                    catch (std::invalid_argument& ex)
+                    {
+                        DebugConsole::response = "Invalid argument: must be of type int.";
+                    }
+
+                    DebugConsole::commandProcessed = true;
+                }
+            }
+        }
+    }
+
     // Close window on Escape.
     Keyboard::addKeyBinding([this]() {
         glfwSetWindowShouldClose(window, true);
     }, GLFW_KEY_ESCAPE, GLFW_RELEASE);
-    if (!DebugConsole::commandProcessed)
-    {
-        if (DebugConsole::command == "shutdown")
-        {
-            glfwSetWindowShouldClose(window, true);
-        }
-    }
 
     // TODO: try using OR to move multiple directions in one call.
     if (debugConsole->hidden)
@@ -224,6 +318,7 @@ void Game::processInput(float deltaTime)
 
 void Game::update()
 {
+    debugConsole->update();
     statsViewer->update();
 }
 
@@ -234,7 +329,7 @@ void Game::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov),
-        static_cast<float>(settings.width) / static_cast<float>(settings.height), 0.1f, 100.0f);
+        static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
     glm::mat4 view = camera->getViewMatrix();
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -255,7 +350,7 @@ void Game::draw()
     meshShader->setVector3f("objectColor", glm::vec3(1.0f));
     cube->render(meshShader);
 
-    statsViewer->render(VERSION.toLongString(), settings.width);
+    statsViewer->render(VERSION.toLongString(), windowSize.x);
     debugConsole->render(glm::vec3(1.0f));
 
     glfwSwapBuffers(window);

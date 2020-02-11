@@ -2,9 +2,12 @@
 #include "input/keyboard.hpp"
 #include <fmt/format.h>
 #include <strutil.h>
+#include <string>
+#include <vector>
 
-std::string DebugConsole::command;
+std::vector<std::string> DebugConsole::command;
 bool DebugConsole::commandProcessed;
+std::string DebugConsole::response;
 
 DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec2 position, GLFWwindow* window)
     : position(position), textRenderer(textRenderer)
@@ -58,6 +61,14 @@ DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec
         moveCursorRight();
     }, GLFW_KEY_RIGHT, GLFW_PRESS);
 
+    // Select previous input.
+    Keyboard::addKeyBinding([this](){
+        input = output[0];
+    }, GLFW_KEY_UP, GLFW_PRESS);
+    Keyboard::addKeyBinding([this](){
+
+    }, GLFW_KEY_UP, GLFW_REPEAT);
+
     // Add text to input.
     for (int codePoint = 0; codePoint <= 0x007F; ++codePoint)
     {
@@ -65,6 +76,58 @@ DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec
             if (codePoint == '`') return;
             inputCharacter(codePoint);
         }, codePoint);
+    }
+}
+
+void DebugConsole::update()
+{
+    // Print command response.
+    if (!response.empty())
+    {
+        output.emplace_back(response);
+        response.clear();
+    }
+
+    // Run commands.
+    if (!(commandProcessed || command.empty()))
+    {
+        if (command.size() == 1)
+        {
+            if (command[0] == "help")
+            {
+                output.emplace_back("help [page number]                     Print command list.");
+                output.emplace_back("exit|close|quit|q                      Close the console window.");
+                output.emplace_back("exit|close|quit|q game                 Exit the game");
+                output.emplace_back("clear                                  Clear the console.");
+                output.emplace_back("toggle stats                           Toggle FPS, version, and other statistics.");
+                output.emplace_back("toggle line|toggle wireframe           Toggle wireframe polygon mode.");
+                output.emplace_back("toggle point                           Toggle point polygon mode.");
+                output.emplace_back("toggle fill                            Toggle fill polygon mode.");
+                output.emplace_back("settings save                          Save settings.");
+                output.emplace_back("set window [width:int] [height:int]    Set the width and height of the window.");
+                output.emplace_back("set fullscreen [bool]                  Toggle window fullscreen.");
+                output.emplace_back("set vsync [bool]                       Turn vSync on or off.");
+                output.emplace_back("set fov [fov:float]                    Set player's field-of-view.");
+                output.emplace_back("Page 1/1");
+                commandProcessed = true;
+            }
+            else if (command[0] == "clear")
+            {
+                output.clear();
+                commandProcessed = true;
+            }
+            else if (command[0] == "exit" || command[0] == "close" || command[0] == "quit" || command[0] == "q")
+            {
+                hidden = true;
+                commandProcessed = true;
+            }
+        }
+    }
+
+    // Remove oldest output when exceeding max.
+    if (output.size() > MAX_OUTPUT_SIZE)
+    {
+        output.pop_front();
     }
 }
 
@@ -163,38 +226,10 @@ void DebugConsole::runCommand(std::string commandString)
     commandString = strutil::to_lower(commandString);
     strutil::trim(commandString);
 
-    if (commandString == "help")
-    {
-        output.emplace_back("help [page number]              Print command list.");
-        output.emplace_back("exit|close|quit|q               Close the console window.");
-        output.emplace_back("clear                           Clear the console.");
-        output.emplace_back("shutdown                        Exit the application.");
-        output.emplace_back("toggle stats                    Toggle FPS, version, and other statistics.");
-        output.emplace_back("toggle line|toggle wireframe    Toggle wireframe polygon mode.");
-        output.emplace_back("toggle point                    Toggle point polygon mode.");
-        output.emplace_back("toggle fill                     Toggle fill polygon mode.");
-        output.emplace_back("Page 1/1");
-    }
-    else if (commandString == "clear")
-    {
-        output.clear();
-    }
-    else if (commandString == "exit" || commandString == "close" || commandString == "quit" || commandString == "q")
-    {
-        hidden = true;
-    }
-    else
-    {
-        command = commandString;
-        output.emplace_back(commandString);
-        commandProcessed = false;
-    }
+    command = strutil::split(commandString, ' ');;
+    output.emplace_back(commandString);
+    commandProcessed = false;
 
     input.clear();
     cursorPosition = 0;
-
-    if (output.size() > MAX_OUTPUT_SIZE)
-    {
-        output.pop_front();
-    }
 }
