@@ -23,19 +23,19 @@ void Mesh::render(const std::shared_ptr<Shader>& shader)
         glActiveTexture(GL_TEXTURE0 + i);
         std::string number;
         std::string name = textures[i].type;
-        if (name == "texture_diffuse")
+        if (name == "Texture_diffuse")
         {
             number = std::to_string(diffuseNum++);
         }
-        else if (name == "texture_specular")
+        else if (name == "Texture_specular")
         {
             number = std::to_string(specularNum++);
         }
-        else if (name == "texture_normal")
+        else if (name == "Texture_normal")
         {
             number = std::to_string(normalNum++);
         }
-        else if (name == "texture_height")
+        else if (name == "Texture_height")
         {
             number = std::to_string(heightNum++);
         }
