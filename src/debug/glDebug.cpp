@@ -50,6 +50,8 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severi
             output << "Other";
             break;
         }
+        default:
+            break;
     }
 
     output << "\n\tType: ";
@@ -100,6 +102,8 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severi
             output << "Other";
             break;
         }
+        default:
+            break;
     }
 
     output << "\n\tSeverity: ";
@@ -125,6 +129,8 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severi
             output << "Notification";
             break;
         }
+        default:
+            break;
     }
 
     LOG_WARN(output.str());
