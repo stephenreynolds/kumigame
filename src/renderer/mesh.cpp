@@ -21,26 +21,44 @@ void Mesh::render(const std::shared_ptr<Shader>& shader)
     for (size_t i = 0; i < textures.size(); ++i)
     {
         glActiveTexture(GL_TEXTURE0 + i);
-        std::string number;
+
+        //std::string number;
         std::string name = textures[i].type;
         if (name == "Texture_diffuse")
         {
-            number = std::to_string(diffuseNum++);
+            name = "Material.diffuse";
+            //number = std::to_string(diffuseNum++);
         }
         else if (name == "Texture_specular")
         {
-            number = std::to_string(specularNum++);
+            name = "Material.specular";
+            //number = std::to_string(specularNum++);
         }
-        else if (name == "Texture_normal")
+        else if (name == "Texture_emissive")
         {
-            number = std::to_string(normalNum++);
+            name = "Material.emissive";
         }
-        else if (name == "Texture_height")
-        {
-            number = std::to_string(heightNum++);
-        }
+//        else if (name == "Texture_normal")
+//        {
+//            name = "Material.normal";
+//            //number = std::to_string(normalNum++);
+//        }
+//        else if (name == "Texture_height")
+//        {
+//            //number = std::to_string(heightNum++);
+//        }
 
-        shader->setInteger((name + number).c_str(), i);
+        //shader->setInteger((name + number).c_str(), i);
+
+//        if (name == "Texture_diffuse")
+//        {
+//            name = "Material.diffuse";
+//
+//            shader->setInteger(name.c_str(), i);
+//            glBindTexture(GL_TEXTURE_2D, textures[i].id);
+//        }
+
+        shader->setInteger(name.c_str(), i);
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 

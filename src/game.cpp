@@ -351,7 +351,6 @@ void Game::draw()
     glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
     lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
     lightPos.y = (sin(glfwGetTime()) / 2.0f) * 1.0f;
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
@@ -362,9 +361,10 @@ void Game::draw()
 
     // Meshes
     meshShader->use();
-    meshShader->setVector3f("LightColor", lightColor);
-    meshShader->setVector3f("LightPos", lightPos);
-    meshShader->setVector3f("ViewPos", camera->position);
+    meshShader->setVector3f("Light.position", glm::vec3(view * glm::vec4(lightPos, 1.0))); // Lighting done in view space.
+    meshShader->setVector3f("Light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+    meshShader->setVector3f("Light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+    meshShader->setVector3f("Light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
     // Nano Suit
     model = glm::mat4(1.0f);
@@ -374,7 +374,19 @@ void Game::draw()
     meshShader->setMatrix4("View", view);
     meshShader->setMatrix4("Projection", projection);
     meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
+    meshShader->setFloat("Material.shininess", 32.0f);
     nanosuit->render(meshShader);
+
+    // Cube
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-0.25f, 0.25f, 0.25f));
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+    meshShader->setMatrix4("Model", model);
+    meshShader->setMatrix4("View", view);
+    meshShader->setMatrix4("Projection", projection);
+    meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
+    meshShader->setFloat("Material.shininess", 32.0f);
+    cube->render(meshShader);
 
     statsViewer->render(VERSION.toLongString(), windowSize.x, windowSize.y);
     debugConsole->render(glm::vec3(1.0f));

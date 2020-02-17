@@ -131,6 +131,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "Texture_height");
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
+    std::vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "Texture_emissive");
+    textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
+
     return Mesh(vertices, indices, textures);
 }
 
