@@ -26,14 +26,15 @@ private:
     const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH); // VERSION_X defined at compile-time.
     const char* SETTINGS_PATH = "settings.toml";
     GLFWwindow *window = nullptr;
-    glm::ivec2 windowPos;
-    glm::ivec2 windowSize;
+    glm::ivec2 windowPos{};
+    glm::ivec2 windowSize{};
     Settings settings;
     std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<DebugConsole> debugConsole;
     std::unique_ptr<StatsViewer> statsViewer;
     std::shared_ptr<Shader> meshShader;
+    std::shared_ptr<Shader> lampShader;
     std::unique_ptr<Model> nanosuit;
     std::unique_ptr<Model> cube;
 

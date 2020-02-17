@@ -7,11 +7,21 @@ layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBittangent;
 
 out vec2 texCoords;
+out vec3 normal;
+out vec3 fragPos;
+out vec3 lightPos;
 
-uniform mat4 mvp;
+uniform mat4 Model;
+uniform mat4 View;
+uniform mat4 Projection;
+uniform mat3 Normal;
+uniform vec3 LightPos;
 
 void main()
 {
-    gl_Position = mvp * vec4(aPos, 1.0);
+    gl_Position = Projection * View * Model * vec4(aPos, 1.0);
+    normal = Normal * aNormal;
+    fragPos = vec3(View * Model * vec4(aPos, 1.0));
+    lightPos = vec3(View * vec4(LightPos, 1.0));
     texCoords = aTexCoords;
 }

@@ -150,12 +150,13 @@ std::optional<std::string> Game::loadAssets()
     // Load shaders.
     auto textShader = std::make_shared<Shader>("assets/shaders/text.vert", "assets/shaders/text.frag");
     meshShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/mesh.frag");
+    lampShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/lamp.frag");
 
     // Text renderer.
     textRenderer = std::make_shared<TextRenderer>(settings.width, settings.height, textShader, "assets/fonts/OCRAEXT.TTF", 14);
 
     // Debug console.
-    debugConsole = std::make_unique<DebugConsole>(textRenderer, glm::vec2(20.0f, static_cast<float>(settings.height) - 20.0f), window);
+    debugConsole = std::make_unique<DebugConsole>(textRenderer, glm::vec2(20.0f, static_cast<float>(settings.height) - 20.0f));
 
     // Stats viewer.
     statsViewer = std::make_unique<StatsViewer>(textRenderer, glm::vec2(20.0f));
@@ -185,11 +186,13 @@ void Game::processInput(float deltaTime)
             {
                 glfwSetWindowShouldClose(window, true);
                 DebugConsole::commandProcessed = true;
+                DebugConsole::response = "Exiting.";
             }
             else if (DebugConsole::command[0] == "settings" && DebugConsole::command[1] == "save")
             {
                 saveSettings(settings, SETTINGS_PATH);
                 DebugConsole::commandProcessed = true;
+                DebugConsole::response = fmt::format("Settings saved at \"{}\".", SETTINGS_PATH);
             }
         }
         else if (DebugConsole::command.size() == 3)
@@ -205,22 +208,25 @@ void Game::processInput(float deltaTime)
                         glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
                         const auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
                         glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 0);
-                        DebugConsole::commandProcessed = true;
+                        DebugConsole::response = "Set window mode to fullscreen.";
                     }
                     else if (DebugConsole::command[2] == "false")
                     {
                         settings.fullscreen = false;
                         glfwSetWindowMonitor(window, nullptr, windowPos.x, windowPos.y, windowSize.x, windowSize.y, 0);
-                        DebugConsole::commandProcessed = true;
+                        DebugConsole::response = "Set window mode to windowed.";
                     }
+
+                    DebugConsole::commandProcessed = true;
                 }
-                else if (DebugConsole::command[2] == "fov")
+                else if (DebugConsole::command[1] == "fov")
                 {
                     try
                     {
-                        float fov = std::stof(DebugConsole::command[3]);
+                        float fov = std::stof(DebugConsole::command[2]);
                         camera->fov = fov;
                         settings.fov = fov;
+                        DebugConsole::response = fmt::format("Set FOV to {:.1f}.", fov);
                     }
                     catch (std::invalid_argument& ex)
                     {
@@ -229,17 +235,19 @@ void Game::processInput(float deltaTime)
 
                     DebugConsole::commandProcessed = true;
                 }
-                else if (DebugConsole::command[2] == "vsync")
+                else if (DebugConsole::command[1] == "vsync")
                 {
-                    if (DebugConsole::command[3] == "true")
+                    if (DebugConsole::command[2] == "true")
                     {
                         glfwSwapInterval(1);
                         settings.vSync = true;
+                        DebugConsole::response = "Vertical sync enabled.";
                     }
-                    else if (DebugConsole::command[3] == "false")
+                    else if (DebugConsole::command[2] == "false")
                     {
                         glfwSwapInterval(0);
                         settings.vSync = false;
+                        DebugConsole::response = "Vertical sync disabled.";
                     }
 
                     DebugConsole::commandProcessed = true;
@@ -259,6 +267,7 @@ void Game::processInput(float deltaTime)
                         glfwSetWindowSize(window, width, height);
                         settings.width = width;
                         settings.height = height;
+                        DebugConsole::response = fmt::format("Set window dimensions to {0:d}x{1:d}.", width, height);
                     }
                     catch (std::invalid_argument& ex)
                     {
@@ -276,32 +285,32 @@ void Game::processInput(float deltaTime)
         glfwSetWindowShouldClose(window, true);
     }, GLFW_KEY_ESCAPE, GLFW_RELEASE);
 
-    // TODO: try using OR to move multiple directions in one call.
     if (debugConsole->hidden)
     {
+        CameraDirection cameraDirection = CameraDirection::None;
         if (Keyboard::pressed(GLFW_KEY_W))
         {
-            camera->processKeyboard(CameraDirection::Forward, deltaTime);
+            cameraDirection |= CameraDirection::Forward;
         }
         if (Keyboard::pressed(GLFW_KEY_S))
         {
-            camera->processKeyboard(CameraDirection::Backward, deltaTime);
+            cameraDirection |= CameraDirection::Backward;
         }
         if (Keyboard::pressed(GLFW_KEY_A))
         {
-            camera->processKeyboard(CameraDirection::Left, deltaTime);
+            cameraDirection |= CameraDirection::Left;
         }
         if (Keyboard::pressed(GLFW_KEY_D))
         {
-            camera->processKeyboard(CameraDirection::Right, deltaTime);
+            cameraDirection |= CameraDirection::Right;
         }
         if (Keyboard::pressed(GLFW_KEY_SPACE))
         {
-            camera->processKeyboard(CameraDirection::Up, deltaTime);
+            cameraDirection |= CameraDirection::Up;
         }
         if (Keyboard::pressed(GLFW_KEY_C))
         {
-            camera->processKeyboard(CameraDirection::Down, deltaTime);
+            cameraDirection |= CameraDirection::Down;
         }
         if (Keyboard::pressed(GLFW_KEY_LEFT_SHIFT))
         {
@@ -311,6 +320,8 @@ void Game::processInput(float deltaTime)
         {
             camera->movementSpeed = camera->DEFAULT_MOVEMENT_SPEED;
         }
+
+        camera->processKeyboard(cameraDirection, deltaTime);
     }
 
     statsViewer->processInput();
@@ -324,7 +335,6 @@ void Game::update()
 
 void Game::draw()
 {
-    //glClearColor(0.529f, 0.808f, 0.922f, 1.0f);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -332,25 +342,41 @@ void Game::draw()
         static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
     glm::mat4 view = camera->getViewMatrix();
 
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 model;
 
+    // Light
+    lampShader->use();
+
+    // Light Source
+    glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+    lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+    lightPos.y = (sin(glfwGetTime()) / 2.0f) * 1.0f;
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, lightPos);
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+    lampShader->setMatrix4("Model", model);
+    lampShader->setMatrix4("View", view);
+    lampShader->setMatrix4("Projection", projection);
+    cube->render(lampShader);
+
+    // Meshes
     meshShader->use();
+    meshShader->setVector3f("LightColor", lightColor);
+    meshShader->setVector3f("LightPos", lightPos);
+    meshShader->setVector3f("ViewPos", camera->position);
 
+    // Nano Suit
+    model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -1.75f, -3.0f));
     model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    meshShader->setMatrix4("mvp", projection * view * model);
-    meshShader->setVector3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    meshShader->setVector3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    meshShader->setMatrix4("Model", model);
+    meshShader->setMatrix4("View", view);
+    meshShader->setMatrix4("Projection", projection);
+    meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
     nanosuit->render(meshShader);
 
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(10.0f, 3.0f, -3.0f));
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    meshShader->setMatrix4("mvp", projection * view * model);
-    meshShader->setVector3f("objectColor", glm::vec3(1.0f));
-    cube->render(meshShader);
-
-    statsViewer->render(VERSION.toLongString(), windowSize.x);
+    statsViewer->render(VERSION.toLongString(), windowSize.x, windowSize.y);
     debugConsole->render(glm::vec3(1.0f));
 
     glfwSwapBuffers(window);
