@@ -15,8 +15,8 @@ void TextRenderer::initRenderDescriptor(GLuint width, GLuint height, std::shared
 
     shader->use();
     shader->setMatrix4(
-        "projection", glm::ortho(0.0f, static_cast<GLfloat>(width), static_cast<GLfloat>(height), 0.0f));
-    shader->setInteger("text", 0);
+        "Projection", glm::ortho(0.0f, static_cast<GLfloat>(width), static_cast<GLfloat>(height), 0.0f));
+    shader->setInteger("Text", 0);
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -85,7 +85,7 @@ void TextRenderer::render(std::string text, glm::vec2 position, GLfloat scale, g
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     shader->use();
-    shader->setVector4f("textColor", color);
+    shader->setVector4f("TextColor", color);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(vao);
 
