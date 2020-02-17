@@ -73,7 +73,6 @@ target_link_libraries(kumigame
     freetype
     glad
     glfw
-    glm
     spdlog)
 
 file(GLOB_RECURSE assets RELATIVE ${CMAKE_SOURCE_DIR}/assets CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)

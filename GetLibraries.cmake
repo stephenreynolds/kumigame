@@ -1,3 +1,5 @@
+# TODO: Use find_package() to look for libraries before using ExternalProject_Add.
+# TODO: Copy MinGW DLLs if using MinGW, or statically link them.
 include(ExternalProject)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external/installed/include/)
@@ -5,7 +7,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external/installed/include/)
 add_custom_target(external_all)
 set_target_properties(external_all PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-# Assimp
+# Assimp TODO: Try linking Assimp dynamically to speed up compile time.
 ExternalProject_Add(assimp_external
     GIT_REPOSITORY https://github.com/assimp/assimp.git
     GIT_TAG v5.0.1
@@ -20,7 +22,7 @@ add_dependencies(external_all assimp_external)
 
 add_library(assimp STATIC IMPORTED)
 set_target_properties(assimp PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/installed/lib/libassimp.a)
-target_link_libraries(assimp INTERFACE irrXML z)
+target_link_libraries(assimp INTERFACE irrXML z) # TODO: Build zlib if not found.
 
 add_library(irrXML STATIC IMPORTED)
 set_target_properties(irrXML PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/installed/lib/libIrrXML.a)
@@ -59,7 +61,7 @@ add_dependencies(external_all freetype_external)
 
 add_library(freetype STATIC IMPORTED)
 set_target_properties(freetype PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/installed/lib/libfreetype.a)
-target_link_libraries(freetype INTERFACE harfbuzz png bz2)
+target_link_libraries(freetype INTERFACE harfbuzz png bz2) # TODO: Build harfbuzz, libpng, and bz2 if not found.
 
 add_custom_command(TARGET freetype_external POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -108,9 +110,8 @@ ExternalProject_Add(glm_external
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG 0.9.9.7
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
-    CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/external/installe
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_BINARY_DIR}/external/src/glm_external/glm ${CMAKE_CURRENT_BINARY_DIR}/external/installed/include/glm)
 set_target_properties(glm_external PROPERTIES EXCLUDE_FROM_ALL TRUE)
 add_dependencies(external_all glm_external)
