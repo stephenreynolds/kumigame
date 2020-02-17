@@ -1,5 +1,4 @@
 #include "camera.hpp"
-#include "input/keyboard.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,27 +17,27 @@ void Camera::processKeyboard(CameraDirection direction, float deltaTime)
 {
     float velocity = movementSpeed * deltaTime;
 
-    if (direction == CameraDirection::Forward)
+    if (direction & CameraDirection::Forward)
     {
         position += front * velocity;
     }
-    if (direction == CameraDirection::Backward)
+    if (direction & CameraDirection::Backward)
     {
         position -= front * velocity;
     }
-    if (direction == CameraDirection::Left)
+    if (direction & CameraDirection::Left)
     {
         position -= right * velocity;
     }
-    if (direction == CameraDirection::Right)
+    if (direction & CameraDirection::Right)
     {
         position += right * velocity;
     }
-    if (direction == CameraDirection::Up)
+    if (direction & CameraDirection::Up)
     {
         position += up * velocity;
     }
-    if (direction == CameraDirection::Down)
+    if (direction & CameraDirection::Down)
     {
         position -= up * velocity;
     }
