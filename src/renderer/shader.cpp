@@ -5,68 +5,69 @@
 #include <fstream>
 #include <sstream>
 
-void checkCompileErrors(GLuint object, const std::string &type);
+void checkCompileErrors(GLuint object, const std::string& type);
 
-Shader::Shader()
-{
-}
-
-Shader::Shader(const GLchar *vertexShaderFile, const GLchar *fragmentShaderFile)
+Shader::Shader(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile)
         : Shader(vertexShaderFile, fragmentShaderFile, nullptr)
 {
 }
 
-Shader::Shader(const GLchar *vertexShaderFile, const GLchar *fragmentShaderFile, const GLchar *geometryShaderFile)
+Shader::Shader(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile, const GLchar* geometryShaderFile)
 {
     loadFromFile(vertexShaderFile, fragmentShaderFile, geometryShaderFile);
 }
 
-int Shader::getUniformLocation(const GLchar *name)
+int Shader::getUniformLocation(const GLchar* name)
 {
     return glGetUniformLocation(id, name);
 }
 
-void Shader::setFloat(const GLchar *name, GLfloat value)
+void Shader::setFloat(const GLchar* name, GLfloat value)
 {
     glUniform1f(glGetUniformLocation(id, name), value);
 }
 
-void Shader::setInteger(const GLchar *name, GLint value)
+void Shader::setInteger(const GLchar* name, GLint value)
 {
     glUniform1i(glGetUniformLocation(id, name), value);
 }
 
-void Shader::setVector2f(const GLchar *name, GLfloat x, GLfloat y)
+void Shader::setVector2f(const GLchar* name, GLfloat x, GLfloat y)
 {
     glUniform2f(glGetUniformLocation(id, name), x, y);
 }
 
-void Shader::setVector2f(const GLchar *name, const glm::vec2 &value)
+void Shader::setVector2f(const GLchar* name, const glm::vec2& value)
 {
     glUniform2f(glGetUniformLocation(id, name), value.x, value.y);
 }
 
-void Shader::setVector3f(const GLchar *name, GLfloat x, GLfloat y, GLfloat z)
+void Shader::setVector3f(const GLchar* name, GLfloat x, GLfloat y, GLfloat z)
 {
     glUniform3f(glGetUniformLocation(id, name), x, y, z);
 }
 
-void Shader::setVector3f(const GLchar *name, const glm::vec3 &value)
+void Shader::setVector3f(const GLchar* name, const glm::vec3& value)
 {
     glUniform3f(glGetUniformLocation(id, name), value.x, value.y, value.z);
 }
 
-void Shader::setVector4f(const GLchar *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void Shader::setVector4f(const GLchar* name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     glUniform4f(glGetUniformLocation(id, name), x, y, z, w);
 }
 
-void Shader::setVector4f(const GLchar *name, const glm::vec4 &value)
+void Shader::setVector4f(const GLchar* name, const glm::vec4& value)
 {
     glUniform4f(glGetUniformLocation(id, name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::setMatrix4(const GLchar *name, const glm::mat4 &matrix)
+void Shader::setMatrix3(const GLchar* name, const glm::mat3& matrix)
+{
+    glUniformMatrix3fv(glGetUniformLocation(id, name), 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+void Shader::setMatrix4(const GLchar* name, const glm::mat4 &matrix)
 {
     glUniformMatrix4fv(glGetUniformLocation(id, name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
@@ -84,7 +85,7 @@ void Shader::stop()
 }
 
 void Shader::loadFromFile(
-        const GLchar *vertexShaderFile, const GLchar *fragmentShaderFile, const GLchar *geometryShaderFile)
+        const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile, const GLchar* geometryShaderFile)
 {
     std::stringstream geomLoadText;
     if (geometryShaderFile)
@@ -134,7 +135,7 @@ void Shader::loadFromFile(
     compile(vShaderCode, fShaderCode, geometryShaderFile ? gShaderCode : nullptr);
 }
 
-void Shader::compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource)
+void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource)
 {
     GLuint vertexShader;
     GLuint fragmentShader;
@@ -177,7 +178,7 @@ void Shader::compile(const GLchar *vertexSource, const GLchar *fragmentSource, c
         glDeleteShader(geometryShader);
 }
 
-void checkCompileErrors(GLuint object, const std::string &type)
+void checkCompileErrors(GLuint object, const std::string& type)
 {
     GLint success;
     GLchar infoLog[1024];
