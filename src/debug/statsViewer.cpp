@@ -67,7 +67,7 @@ void StatsViewer::update()
     }
 }
 
-void StatsViewer::render(const std::string& version, int frameWidth)
+void StatsViewer::render(const std::string& version, int frameWidth, int frameHeight)
 {
     // Update every one second.
     if (!hidden)
@@ -80,12 +80,12 @@ void StatsViewer::render(const std::string& version, int frameWidth)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw FPS and ms/frame.
-        auto out = fmt::format("{0:.0f} ({1:.2f}ms)\n{2}", fps, ms, glGetString(GL_RENDERER));
+        auto out = fmt::format("{0:.0f} ({1:.2f}ms)\n{2}\n{3}x{4}", fps, ms, glGetString(GL_RENDERER), frameWidth, frameHeight);
         renderer->render(out, glm::vec2(position.x, position.y), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
 
         // Draw version.
         out = fmt::format("{}\nOpenGL {}.{}", version, GLVersion.major, GLVersion.minor);
-        renderer->render(out, glm::vec2(frameWidth - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), true);
+        renderer->render(out, glm::vec2(frameWidth - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f), true);
 
         glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
         glEnable(GL_DEPTH_TEST); // Restore depth testing.

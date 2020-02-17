@@ -18,7 +18,7 @@ public:
 
     void processInput();
     void update();
-    void render(const std::string& version, int frameWidth);
+    void render(const std::string& version, int frameWidth, int frameHeight);
 
 private:
     std::shared_ptr<TextRenderer> renderer;
