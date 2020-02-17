@@ -11,7 +11,7 @@ ExternalProject_Add(assimp_external
     GIT_TAG v5.0.1
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external
     CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
+        -DBUILD_SHARED_LIBS=OFF
         -DASSIMP_BUILD_ASSIMP_TOOLS=OFF
         -DASSIMP_BUILD_TESTS=OFF
         -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/external/installed)
