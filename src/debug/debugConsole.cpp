@@ -9,11 +9,16 @@ std::vector<std::string> DebugConsole::command;
 bool DebugConsole::commandProcessed;
 std::string DebugConsole::response;
 
-DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec2 position, GLFWwindow* window)
+std::string columnString(const std::string& command, const std::string& description, unsigned int width)
+{
+    return fmt::format("{:<{}}{:<{}}", command, width, description, width);
+}
+
+DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec2 position)
     : position(position), textRenderer(textRenderer)
 {
     // Toggle console visibility.
-    Keyboard::addKeyBinding([this, window]() {
+    Keyboard::addKeyBinding([this]() {
         hidden = !hidden;
     }, GLFW_KEY_GRAVE_ACCENT, GLFW_RELEASE);
 
@@ -95,20 +100,21 @@ void DebugConsole::update()
         {
             if (command[0] == "help")
             {
-                output.emplace_back("help [page number]                     Print command list.");
-                output.emplace_back("exit|close|quit|q                      Close the console window.");
-                output.emplace_back("exit|close|quit|q game                 Exit the game");
-                output.emplace_back("clear                                  Clear the console.");
-                output.emplace_back("toggle stats                           Toggle FPS, version, and other statistics.");
-                output.emplace_back("toggle line|toggle wireframe           Toggle wireframe polygon mode.");
-                output.emplace_back("toggle point                           Toggle point polygon mode.");
-                output.emplace_back("toggle fill                            Toggle fill polygon mode.");
-                output.emplace_back("settings save                          Save settings.");
-                output.emplace_back("set window [width:int] [height:int]    Set the width and height of the window.");
-                output.emplace_back("set fullscreen [bool]                  Toggle window fullscreen.");
-                output.emplace_back("set vsync [bool]                       Turn vSync on or off.");
-                output.emplace_back("set fov [fov:float]                    Set player's field-of-view.");
-                output.emplace_back("Page 1/1");
+                const int width = 40;
+                output.emplace_back(columnString("help [page number]", "Print command list.", width));
+                output.emplace_back(columnString("exit|close|quit|q", "Close the console window.", width));
+                output.emplace_back(columnString("exit|close|quit|q game", "Exit the game.", width));
+                output.emplace_back(columnString("clear", "Clear the console.", width));
+                output.emplace_back(columnString("toggle stats", "Toggle FPS, version, and other statistics.", width));
+                output.emplace_back(columnString("toggle line|toggle wireframe", "Toggle wireframe polygon mode.", width));
+                output.emplace_back(columnString("toggle point", "Toggle point polygon mode.", width));
+                output.emplace_back(columnString("toggle fill", "Toggle fill polygon mode.", width));
+                output.emplace_back(columnString("settings save", "Save settings.", width));
+                output.emplace_back(columnString("set window [width:int] [height:int]", "Set the width and height of the window.", width));
+                output.emplace_back(columnString("set fullscreen [bool]", "Toggle window fullscreen.", width));
+                output.emplace_back(columnString("set vsync [bool]", "Turn vSync on or off.", width));
+                output.emplace_back(columnString("set fov [fov:float]", "Set player's field-of-view.", width));
+                output.emplace_back(columnString("Page 1/1", "", width));
                 commandProcessed = true;
             }
             else if (command[0] == "clear")

@@ -19,7 +19,7 @@ public:
     glm::vec2 position;
     bool hidden = true;
 
-    DebugConsole(std::shared_ptr<TextRenderer>& textRenderer, glm::vec2 position, GLFWwindow* window);
+    DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec2 position);
 
     void update();
     void render(glm::vec3 textColor = glm::vec3(0.0f));
