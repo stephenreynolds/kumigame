@@ -13,10 +13,10 @@ void Mesh::render(const std::shared_ptr<Shader>& shader)
 {
     shader->use();
 
-    GLuint diffuseNum = 1;
-    GLuint specularNum = 1;
-    GLuint normalNum = 1;
-    GLuint heightNum = 1;
+//    GLuint diffuseNum = 1;
+//    GLuint specularNum = 1;
+//    GLuint normalNum = 1;
+//    GLuint heightNum = 1;
 
     for (size_t i = 0; i < textures.size(); ++i)
     {
@@ -33,10 +33,6 @@ void Mesh::render(const std::shared_ptr<Shader>& shader)
         {
             name = "Material.specular";
             //number = std::to_string(specularNum++);
-        }
-        else if (name == "Texture_emissive")
-        {
-            name = "Material.emissive";
         }
 //        else if (name == "Texture_normal")
 //        {
