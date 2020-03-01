@@ -1,11 +1,11 @@
 #ifndef KUMIGAME_RENDERER_MESH_HPP
 #define KUMIGAME_RENDERER_MESH_HPP
 
+#include "material.hpp"
 #include "shader.hpp"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <memory>
-#include <string>
 #include <vector>
 
 struct Vertex
@@ -17,23 +17,17 @@ struct Vertex
     glm::vec3 bitTangent;
 };
 
-struct Texture
-{
-    GLuint id;
-    std::string type;
-    std::string path;
-};
-
 class Mesh
 {
 public:
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     std::vector<Texture> textures;
+    std::vector<Material> materials;
 
-    Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, std::vector<Texture> &textures);
+    Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, std::vector<Texture> &textures, Material material);
 
-    void render(const std::shared_ptr<Shader>& shader);
+    void render(const std::shared_ptr<Shader>& shader, size_t materialIndex = 0);
 
 private:
     GLuint vao = 0;

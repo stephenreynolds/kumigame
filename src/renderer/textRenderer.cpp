@@ -1,6 +1,6 @@
-#include "renderer/textRenderer.hpp"
-#include "renderer/shader.hpp"
-#include "debug/log.hpp"
+#include "textRenderer.hpp"
+#include "shader.hpp"
+#include "../debug/log.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
 TextRenderer::TextRenderer(GLuint width, GLuint height, std::shared_ptr<Shader> &shader, const std::string& fontPath, GLuint fontSize)

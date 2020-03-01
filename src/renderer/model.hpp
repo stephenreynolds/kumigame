@@ -1,7 +1,8 @@
 #ifndef KUMIGAME_RENDER_MODEL_HPP
 #define KUMIGAME_RENDER_MODEL_HPP
 
-#include "renderer/mesh.hpp"
+#include "material.hpp"
+#include "mesh.hpp"
 #include <assimp/scene.h>
 #include <memory>
 #include <string>
@@ -12,7 +13,9 @@ class Model
 public:
     explicit Model(const std::string& path);
 
-    void render(const std::shared_ptr<Shader>& shader);
+    void render(const std::shared_ptr<Shader>& shader, size_t materialIndex = 0);
+    size_t addMeshMaterial(size_t meshIndex, Material material);
+    void setMeshMaterial(size_t meshIndex, size_t materialIndex, Material material);
 
 private:
     std::vector<Mesh> meshes;

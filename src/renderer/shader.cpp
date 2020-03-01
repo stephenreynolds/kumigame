@@ -1,5 +1,5 @@
-#include "renderer/shader.hpp"
-#include "debug/log.hpp"
+#include "shader.hpp"
+#include "../debug/log.hpp"
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
@@ -12,7 +12,7 @@ Shader::Shader(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile)
 {
 }
 
-Shader::Shader(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile, const GLchar* geometryShaderFile)
+Shader::Shader( const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile, const GLchar* geometryShaderFile)
 {
     loadFromFile(vertexShaderFile, fragmentShaderFile, geometryShaderFile);
 }
@@ -137,9 +137,9 @@ void Shader::loadFromFile(
 
 void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource)
 {
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    GLuint geometryShader;
+    GLuint vertexShader = 0;
+    GLuint fragmentShader = 0;
+    GLuint geometryShader = 0;
 
     // Vertex Shader
     vertexShader = glCreateShader(GL_VERTEX_SHADER);

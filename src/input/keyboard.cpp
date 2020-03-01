@@ -1,5 +1,5 @@
-#include "input/keyboard.hpp"
-#include "input/keyState.hpp"
+#include "keyboard.hpp"
+#include "keyState.hpp"
 #include <functional>
 
 std::map<GLFW_KEY, KeyState> Keyboard::keyStates;

@@ -2,15 +2,16 @@
 #define KUMIGAME_GAME_HPP
 
 #include "camera.hpp"
-#include "settings.hpp"
 #include "version.hpp"
+#include "settings.hpp"
 #include "debug/debugConsole.hpp"
 #include "debug/statsViewer.hpp"
 #include "renderer/model.hpp"
-#include "renderer/textRenderer.hpp"
+#include "renderer/shader.hpp"
 #include <GLFW/glfw3.h>
+#include <memory>
 #include <optional>
-#include <renderer/texture.hpp>
+#include <string>
 
 class Game
 {
@@ -23,12 +24,12 @@ public:
 
 private:
     const char* TITLE = "kumigame";
-    const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH); // VERSION_X defined at compile-time.
+    const Version VERSION = Version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
     const char* SETTINGS_PATH = "settings.toml";
-    GLFWwindow *window = nullptr;
+    Settings settings;
+    GLFWwindow* window = nullptr;
     glm::ivec2 windowPos{};
     glm::ivec2 windowSize{};
-    Settings settings;
     std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<DebugConsole> debugConsole;
@@ -37,6 +38,7 @@ private:
     std::shared_ptr<Shader> lampShader;
     std::unique_ptr<Model> nanosuit;
     std::unique_ptr<Model> cube;
+    size_t lampMaterialIndex = 0;
 
     std::optional<std::string> init();
     std::optional<std::string> loadAssets();

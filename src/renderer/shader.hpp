@@ -3,11 +3,14 @@
 
 #include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 class Shader
 {
 public:
-    GLuint id;
+    GLuint id = 0;
 
     Shader() = default;
     Shader(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile);
@@ -30,6 +33,9 @@ public:
     void stop();
     void loadFromFile(const GLchar* vertexShaderFile, const GLchar* fragmentShaderFile, const GLchar* geometryShaderFile);
     void compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource = nullptr);
+
+private:
+    static std::vector<std::shared_ptr<Shader>> shaders;
 };
 
 #endif //KUMIGAME_RENDERER_SHADER_HPP

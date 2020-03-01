@@ -2,9 +2,12 @@
 #define KUMIGAME_SETTINGS_HPP
 
 #include <spdlog/spdlog.h>
+#include <toml11/toml.hpp>
 
 struct Settings
 {
+    toml::value file;
+
     // Display
     int width = 1280;
     int height = 720;

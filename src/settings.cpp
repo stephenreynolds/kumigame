@@ -1,31 +1,28 @@
 #include "settings.hpp"
 #include "debug/log.hpp"
-#include <cpptoml.h>
 #include <spdlog/spdlog.h>
+#include <toml11/toml.hpp>
+#include <limits>
 #include <string>
 
 void readSettings(Settings &settings, const char *filepath)
 {
     try
     {
-        std::ifstream file(filepath);
+        settings.file = toml::parse<toml::preserve_comments>(filepath);
 
-        std::stringstream ss;
-        ss << file.rdbuf();
-        file.close();
+        // [graphics.display]
+        auto graphicsDisplay = toml::find(settings.file, "graphics", "display");
+        settings.width = toml::find<int>(graphicsDisplay, "width");
+        settings.height = toml::find<int>(graphicsDisplay, "height");
+        settings.fullscreen = toml::find<bool>(graphicsDisplay, "fullscreen");
+        settings.vSync = toml::find<bool>(graphicsDisplay, "vSync");
+        settings.fov = toml::find<float>(graphicsDisplay, "fov");
 
-        auto tomlSettings = cpptoml::parse_file(filepath);
-
-        // Display
-        settings.width = tomlSettings->get_qualified_as<int>("graphics.display.width").value_or(settings.width);
-        settings.height = tomlSettings->get_qualified_as<int>("graphics.display.height").value_or(settings.height);
-        settings.fullscreen = tomlSettings->get_qualified_as<bool>("graphics.display.fullscreen").value_or(settings.fullscreen);
-        settings.vSync = tomlSettings->get_qualified_as<bool>("graphics.display.vSync").value_or(settings.vSync);
-        settings.fov = static_cast<float>(tomlSettings->get_qualified_as<double>("graphics.display.fov").value_or(settings.fov));
-
-        // Log
-        int consoleLevel = tomlSettings->get_qualified_as<int>("log.level.console").value_or(settings.consoleLogLevel);
-        int fileLevel = tomlSettings->get_qualified_as<int>("log.level.file").value_or(settings.fileLogLevel);
+        // [log.level]
+        auto logLevel = toml::find(settings.file, "log", "level");
+        int consoleLevel = toml::find<int>(logLevel, "console");
+        int fileLevel = toml::find<int>(logLevel, "file");
 
         if (consoleLevel < 0 || consoleLevel > 6)
         {
@@ -49,7 +46,7 @@ void readSettings(Settings &settings, const char *filepath)
             settings.fileLogLevel = static_cast<spdlog::level::level_enum>(fileLevel);
         }
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
         LOG_ERROR("Failed to load settings from {}: {}", filepath, e.what());
     }
@@ -57,33 +54,28 @@ void readSettings(Settings &settings, const char *filepath)
 
 void saveSettings(Settings &settings, const char *filepath)
 {
-    auto root = cpptoml::make_table();
+    try
+    {
+        // [graphics.display]
+        toml::value& graphicsDisplay = toml::find(settings.file, "graphics", "display");
+        toml::find(graphicsDisplay, "width") = settings.width;
+        toml::find(graphicsDisplay, "height") = settings.height;
+        toml::find(graphicsDisplay, "fullscreen") = settings.fullscreen;
+        toml::find(graphicsDisplay, "vSync") = settings.vSync;
+        toml::find(graphicsDisplay, "fov") = settings.fov;
 
-    // graphics.display
-    auto graphics = cpptoml::make_table();
-    auto graphicsDisplay = cpptoml::make_table();
+        // [log.level]
+        toml::value& logLevel = toml::find(settings.file, "log", "level");
+        toml::find(logLevel, "console") = static_cast<int>(settings.consoleLogLevel);
+        toml::find(logLevel, "file") = static_cast<int>(settings.fileLogLevel);
 
-    graphicsDisplay->insert("width", settings.width);
-    graphicsDisplay->insert("height", settings.height);
-    graphicsDisplay->insert("fullscreen", settings.fullscreen);
-    graphicsDisplay->insert("vSync", settings.vSync);
-    graphicsDisplay->insert("fov", settings.fov);
-
-    graphics->insert("display", graphicsDisplay);
-    root->insert("graphics", graphics);
-
-    // log.level
-    auto log = cpptoml::make_table();
-    auto logLevel = cpptoml::make_table();
-
-    logLevel->insert("console", static_cast<int>(settings.consoleLogLevel));
-    logLevel->insert("file", static_cast<int>(settings.fileLogLevel));
-
-    log->insert("level", logLevel);
-    root->insert("log", log);
-
-    // Output to file.
-    std::ofstream file(filepath);
-    file << (*root);
-    file.close();
+        // Output to file.
+        std::ofstream file(filepath);
+        file << toml::format(settings.file, 0, std::numeric_limits<float>::digits10, false, true);
+        file.close();
+    }
+    catch (const std::exception& e)
+    {
+        LOG_ERROR("Failed to write settings to {}: {}", filepath, e.what());
+    }
 }

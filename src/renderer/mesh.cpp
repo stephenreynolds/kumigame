@@ -1,62 +1,35 @@
-#include "renderer/mesh.hpp"
+#include "mesh.hpp"
 #include <fmt/format.h>
 #include <glad/glad.h>
-#include <string>
+#include <utility>
+#include <vector>
 
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures)
+Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures, Material material)
     : vertices(std::move(vertices)), indices(std::move(indices)), textures(std::move(textures))
 {
+    materials.emplace_back(std::move(material));
     setupMesh();
 }
 
-void Mesh::render(const std::shared_ptr<Shader>& shader)
+void Mesh::render(const std::shared_ptr<Shader>& shader, size_t materialIndex)
 {
     shader->use();
 
-//    GLuint diffuseNum = 1;
-//    GLuint specularNum = 1;
-//    GLuint normalNum = 1;
-//    GLuint heightNum = 1;
+    Material material = materials[materialIndex];
 
-    for (size_t i = 0; i < textures.size(); ++i)
+    if (material.diffuse)
     {
-        glActiveTexture(GL_TEXTURE0 + i);
-
-        //std::string number;
-        std::string name = textures[i].type;
-        if (name == "Texture_diffuse")
-        {
-            name = "Material.diffuse";
-            //number = std::to_string(diffuseNum++);
-        }
-        else if (name == "Texture_specular")
-        {
-            name = "Material.specular";
-            //number = std::to_string(specularNum++);
-        }
-//        else if (name == "Texture_normal")
-//        {
-//            name = "Material.normal";
-//            //number = std::to_string(normalNum++);
-//        }
-//        else if (name == "Texture_height")
-//        {
-//            //number = std::to_string(heightNum++);
-//        }
-
-        //shader->setInteger((name + number).c_str(), i);
-
-//        if (name == "Texture_diffuse")
-//        {
-//            name = "Material.diffuse";
-//
-//            shader->setInteger(name.c_str(), i);
-//            glBindTexture(GL_TEXTURE_2D, textures[i].id);
-//        }
-
-        shader->setInteger(name.c_str(), i);
-        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        glActiveTexture(GL_TEXTURE0);
+        shader->setInteger("Material.diffuse", 0);
+        glBindTexture(GL_TEXTURE_2D, material.diffuse->id);
     }
+    if (material.specular)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        shader->setInteger("Material.specular", 1);
+        glBindTexture(GL_TEXTURE_2D, material.specular->id);
+    }
+    shader->setFloat("Material.shininess", material.shininess);
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

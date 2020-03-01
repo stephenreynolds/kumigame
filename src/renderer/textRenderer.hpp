@@ -1,7 +1,7 @@
 #ifndef KUMIGAME_RENDERER_TEXT_RENDERER_HPP
 #define KUMIGAME_RENDERER_TEXT_RENDERER_HPP
 
-#include "renderer/shader.hpp"
+#include "shader.hpp"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <glm/glm.hpp>

@@ -1,11 +1,11 @@
 [graphics.display]
-    width = 1440
-    height = 810
-    fullscreen = false
-    vSync = false
-    fov = 45.0
+width = 1440
+height = 810
+fullscreen = false
+vSync = false
+fov = 45.0
 
 # Log levels: 0:trace, 1:debug, 2:info, 3:warn, 4:error, 5:critical, 6:off
 [log.level]
-    console = 1
-    file = 0
+console = 1
+file = 0

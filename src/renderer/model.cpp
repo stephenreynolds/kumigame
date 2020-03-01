@@ -1,26 +1,37 @@
-#include "renderer/model.hpp"
-#include "debug/log.hpp"
+#include "model.hpp"
+#include "material.hpp"
+#include "shader.hpp"
+#include "../debug/log.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <stb_image.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-
-uint32_t textureFromFile(const std::string& path, const std::string& directory);
 
 Model::Model(const std::string &path)
 {
     loadModel(path);
 }
 
-void Model::render(const std::shared_ptr<Shader>& shader)
+void Model::render(const std::shared_ptr<Shader>& shader, size_t materialIndex)
 {
     for (auto& mesh : meshes)
     {
-        mesh.render(shader);
+        mesh.render(shader, materialIndex);
     }
+}
+
+size_t Model::addMeshMaterial(size_t meshIndex, Material material)
+{
+    meshes[meshIndex].materials.emplace_back(std::move(material));
+    return meshes[meshIndex].materials.size() - 1;
+}
+
+void Model::setMeshMaterial(size_t meshIndex, size_t materialIndex, Material material)
+{
+    meshes[meshIndex].materials[materialIndex] = std::move(material);
 }
 
 void Model::loadModel(const std::string &path)
@@ -134,7 +145,27 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     std::vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "Texture_emissive");
     textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
 
-    return Mesh(vertices, indices, textures);
+    float shininess;
+    material->Get(AI_MATKEY_SHININESS, shininess);
+
+    std::shared_ptr<Texture> diffuse;
+    if (!diffuseMaps.empty())
+    {
+        diffuse = std::make_shared<Texture>(diffuseMaps[0]);
+    }
+    std::shared_ptr<Texture> specular;
+    if (!specularMaps.empty())
+    {
+        specular = std::make_shared<Texture>(specularMaps[0]);
+    }
+
+    Material mat = {
+        .diffuse = diffuse,
+        .specular = specular,
+        .shininess = shininess
+    };
+
+    return Mesh(vertices, indices, textures, mat);
 }
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *material, aiTextureType type, const std::string& typeName)
@@ -174,46 +205,4 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *material, aiTexture
     return textures;
 }
 
-uint32_t textureFromFile(const std::string& path, const std::string& directory)
-{
-    std::string fileName = directory + '/' + path;
 
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, numComponents;
-    unsigned char* data = stbi_load(fileName.c_str(), &width, &height, &numComponents, 0);
-    if (data)
-    {
-        GLenum format = 0;
-        if (numComponents == 1)
-        {
-            format = GL_RED;
-        }
-        else if (numComponents == 3)
-        {
-            format = GL_RGB;
-        }
-        else if (numComponents == 4)
-        {
-            format = GL_RGBA;
-        }
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        LOG_ERROR("Texture failed to load at {}", path);
-    }
-
-    stbi_image_free(data);
-
-    return textureID;
-}

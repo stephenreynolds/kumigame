@@ -1,7 +1,7 @@
 #ifndef KUMIGAME_DEBUG_STATS_VIEWER_HPP
 #define KUMIGAME_DEBUG_STATS_VIEWER_HPP
 
-#include "renderer/textRenderer.hpp"
+#include "../renderer/textRenderer.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <memory>

@@ -1,7 +1,7 @@
 #ifndef KUMIGAME_DEBUG_DEBUG_CONSOLE_HPP
 #define KUMIGAME_DEBUG_DEBUG_CONSOLE_HPP
 
-#include "renderer/textRenderer.hpp"
+#include "../renderer/textRenderer.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <deque>
@@ -9,12 +9,33 @@
 #include <string>
 #include <vector>
 
+struct Command
+{
+    std::string input{};
+    std::vector<std::string> args{};
+    bool processed = false;
+    std::string response{};
+
+    std::string& operator[](int i)
+    {
+        return args[i];
+    }
+
+    bool empty()
+    {
+        return args.empty();
+    }
+
+    size_t size()
+    {
+        return args.size();
+    }
+};
+
 class DebugConsole
 {
 public:
-    static std::vector<std::string> command;
-    static bool commandProcessed;
-    static std::string response;
+    static Command command;
 
     glm::vec2 position;
     bool hidden = true;

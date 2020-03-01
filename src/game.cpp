@@ -2,6 +2,7 @@
 #include "debug/glDebug.hpp"
 #include "debug/log.hpp"
 #include "input/keyboard.hpp"
+#include "renderer/material.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -97,6 +98,7 @@ std::optional<std::string> Game::init()
 
     LOG_INFO("OpenGL {}.{}", GLVersion.major, GLVersion.minor);
     LOG_INFO("Graphics device: {}", glGetString(GL_RENDERER));
+    LOG_INFO("Resolution: {}x{}", windowSize.x, windowSize.y);
 
     GLint flags;
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -147,11 +149,17 @@ std::optional<std::string> Game::init()
 
 std::optional<std::string> Game::loadAssets()
 {
+    LOG_INFO("Loading assets...");
+    double assetsTime = glfwGetTime();
+    double time = glfwGetTime();
+
     // Load shaders.
     auto textShader = std::make_shared<Shader>("assets/shaders/text.vert", "assets/shaders/text.frag");
     meshShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/mesh.frag");
     lampShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/lamp.frag");
+    LOG_INFO("Loaded shaders ({} ms).", 1000 * (glfwGetTime() - time));
 
+    time = glfwGetTime();
     // Text renderer.
     textRenderer = std::make_shared<TextRenderer>(settings.width, settings.height, textShader, "assets/fonts/OCRAEXT.TTF", 14);
 
@@ -164,9 +172,26 @@ std::optional<std::string> Game::loadAssets()
     // Camera
     camera = std::make_unique<Camera>();
 
+    LOG_INFO("Loaded classes ({} ms).", 1000 * (glfwGetTime() - time));
+
+    time = glfwGetTime();
     // Load models.
     nanosuit = std::make_unique<Model>("assets/models/nanosuit/nanosuit.obj");
     cube = std::make_unique<Model>("assets/models/cube/cube.obj");
+
+    Texture lampTexture = {
+        .id = textureFromFile("white.png", "assets/models/cube")
+    };
+
+    Material lampMaterial = {
+        .diffuse = std::make_shared<Texture>(lampTexture)
+    };
+
+    lampMaterialIndex = cube->addMeshMaterial(0, lampMaterial);
+
+    LOG_INFO("Loaded models ({} ms).", 1000 * (glfwGetTime() - time));
+
+    LOG_INFO("Finished loading assets ({} ms).", 1000 * (glfwGetTime() - assetsTime));
 
     return {};
 }
@@ -178,21 +203,21 @@ void Game::processInput(float deltaTime)
     Keyboard::processKeys(window);
 
     // Process console commands.
-    if (!(DebugConsole::commandProcessed || DebugConsole::command.empty()))
+    if (!(DebugConsole::command.processed || DebugConsole::command.empty()))
     {
         if (DebugConsole::command.size() == 2)
         {
             if ((DebugConsole::command[0] == "exit" || DebugConsole::command[0] == "close") && DebugConsole::command[1] == "game")
             {
                 glfwSetWindowShouldClose(window, true);
-                DebugConsole::commandProcessed = true;
-                DebugConsole::response = "Exiting.";
+                DebugConsole::command.processed = true;
+                DebugConsole::command.response = "Exiting...";
             }
             else if (DebugConsole::command[0] == "settings" && DebugConsole::command[1] == "save")
             {
                 saveSettings(settings, SETTINGS_PATH);
-                DebugConsole::commandProcessed = true;
-                DebugConsole::response = fmt::format("Settings saved at \"{}\".", SETTINGS_PATH);
+                DebugConsole::command.processed = true;
+                DebugConsole::command.response = fmt::format("Settings saved at \"{}\".", SETTINGS_PATH);
             }
         }
         else if (DebugConsole::command.size() == 3)
@@ -208,16 +233,16 @@ void Game::processInput(float deltaTime)
                         glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
                         const auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
                         glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 0);
-                        DebugConsole::response = "Set window mode to fullscreen.";
+                        DebugConsole::command.response = "Set window mode to fullscreen.";
                     }
                     else if (DebugConsole::command[2] == "false")
                     {
                         settings.fullscreen = false;
                         glfwSetWindowMonitor(window, nullptr, windowPos.x, windowPos.y, windowSize.x, windowSize.y, 0);
-                        DebugConsole::response = "Set window mode to windowed.";
+                        DebugConsole::command.response = "Set window mode to windowed.";
                     }
 
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
                 }
                 else if (DebugConsole::command[1] == "fov")
                 {
@@ -226,14 +251,14 @@ void Game::processInput(float deltaTime)
                         float fov = std::stof(DebugConsole::command[2]);
                         camera->fov = fov;
                         settings.fov = fov;
-                        DebugConsole::response = fmt::format("Set FOV to {:.1f}.", fov);
+                        DebugConsole::command.response = fmt::format("Set FOV to {:.1f}.", fov);
                     }
                     catch (std::invalid_argument& ex)
                     {
-                        DebugConsole::response = "Invalid argument: must be of type float.";
+                        DebugConsole::command.response = "Invalid argument: must be of type float.";
                     }
 
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
                 }
                 else if (DebugConsole::command[1] == "vsync")
                 {
@@ -241,16 +266,16 @@ void Game::processInput(float deltaTime)
                     {
                         glfwSwapInterval(1);
                         settings.vSync = true;
-                        DebugConsole::response = "Vertical sync enabled.";
+                        DebugConsole::command.response = "Vertical sync enabled.";
                     }
                     else if (DebugConsole::command[2] == "false")
                     {
                         glfwSwapInterval(0);
                         settings.vSync = false;
-                        DebugConsole::response = "Vertical sync disabled.";
+                        DebugConsole::command.response = "Vertical sync disabled.";
                     }
 
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
                 }
             }
         }
@@ -267,14 +292,14 @@ void Game::processInput(float deltaTime)
                         glfwSetWindowSize(window, width, height);
                         settings.width = width;
                         settings.height = height;
-                        DebugConsole::response = fmt::format("Set window dimensions to {0:d}x{1:d}.", width, height);
+                        DebugConsole::command.response = fmt::format("Set window dimensions to {0:d}x{1:d}.", width, height);
                     }
                     catch (std::invalid_argument& ex)
                     {
-                        DebugConsole::response = "Invalid argument: must be of type int.";
+                        DebugConsole::command.response = "Invalid argument: must be of type int.";
                     }
 
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
                 }
             }
         }
@@ -339,7 +364,7 @@ void Game::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov),
-        static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
+                                            static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
     glm::mat4 view = camera->getViewMatrix();
 
     glm::mat4 model;
@@ -357,36 +382,53 @@ void Game::draw()
     lampShader->setMatrix4("Model", model);
     lampShader->setMatrix4("View", view);
     lampShader->setMatrix4("Projection", projection);
-    cube->render(lampShader);
+    cube->render(lampShader, lampMaterialIndex);
 
     // Meshes
     meshShader->use();
-    meshShader->setVector3f("Light.position", glm::vec3(view * glm::vec4(lightPos, 1.0))); // Lighting done in view space.
+    meshShader->setVector3f("Light.position", lightPos); // Lighting done in view space.
     meshShader->setVector3f("Light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
     meshShader->setVector3f("Light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
     meshShader->setVector3f("Light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-    // Nano Suit
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -1.75f, -3.0f));
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    meshShader->setMatrix4("Model", model);
-    meshShader->setMatrix4("View", view);
-    meshShader->setMatrix4("Projection", projection);
-    meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
-    meshShader->setFloat("Material.shininess", 32.0f);
-    nanosuit->render(meshShader);
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
 
     // Cube
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-0.25f, 0.25f, 0.25f));
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    meshShader->setMatrix4("Model", model);
-    meshShader->setMatrix4("View", view);
-    meshShader->setMatrix4("Projection", projection);
-    meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
-    meshShader->setFloat("Material.shininess", 32.0f);
-    cube->render(meshShader);
+    meshShader->setMatrix4("ViewProjection", projection * view);
+    meshShader->setVector3f("ViewPos", camera->position);
+    meshShader->setVector3f("Light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+    for (unsigned int i = 0; i < 10; ++i)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, cubePositions[i]);
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        meshShader->setMatrix4("Model", model);
+        meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
+        cube->render(meshShader);
+    }
+
+    // Nano Suit
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(0.0f, -1.75f, -3.0f));
+//    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+//    meshShader->setMatrix4("Model", model);
+//    meshShader->setMatrix4("View", view);
+//    meshShader->setMatrix4("Projection", projection);
+//    meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
+//    meshShader->setVector3f("ViewPos", camera->position);
+//    nanosuit->render(meshShader);
 
     statsViewer->render(VERSION.toLongString(), windowSize.x, windowSize.y);
     debugConsole->render(glm::vec3(1.0f));

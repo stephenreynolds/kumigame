@@ -1,13 +1,13 @@
-#include "debug/debugConsole.hpp"
-#include "input/keyboard.hpp"
+#include "debugConsole.hpp"
+#include "log.hpp"
+#include "../input/keyboard.hpp"
+#include "../util/string.hpp"
 #include <fmt/format.h>
-#include <strutil.h>
 #include <string>
 #include <vector>
+#include <sstream>
 
-std::vector<std::string> DebugConsole::command;
-bool DebugConsole::commandProcessed;
-std::string DebugConsole::response;
+Command DebugConsole::command;
 
 std::string columnString(const std::string& command, const std::string& description, unsigned int width)
 {
@@ -67,6 +67,9 @@ DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec
     }, GLFW_KEY_RIGHT, GLFW_PRESS);
 
     // Select previous input.
+    // TODO: Responses should not be in command history.
+    // TODO: Move cursor to end of line.
+    // TODO: Allow moving both directions in history.
     Keyboard::addKeyBinding([this](){
         input = output[0];
     }, GLFW_KEY_UP, GLFW_PRESS);
@@ -87,16 +90,17 @@ DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec
 void DebugConsole::update()
 {
     // Print command response.
-    if (!response.empty())
+    if (!command.response.empty())
     {
-        output.emplace_back(response);
-        response.clear();
+        output.emplace_back(command.response);
+        LOG_INFO("Debug Console: {}", command.response);
+        command.response.clear();
     }
 
     // Run commands.
-    if (!(commandProcessed || command.empty()))
+    if (!(command.processed || command.args.empty()))
     {
-        if (command.size() == 1)
+        if (command.args.size() == 1)
         {
             if (command[0] == "help")
             {
@@ -115,19 +119,25 @@ void DebugConsole::update()
                 output.emplace_back(columnString("set vsync [bool]", "Turn vSync on or off.", width));
                 output.emplace_back(columnString("set fov [fov:float]", "Set player's field-of-view.", width));
                 output.emplace_back(columnString("Page 1/1", "", width));
-                commandProcessed = true;
+                command.processed = true;
             }
             else if (command[0] == "clear")
             {
                 output.clear();
-                commandProcessed = true;
+                command.processed = true;
             }
             else if (command[0] == "exit" || command[0] == "close" || command[0] == "quit" || command[0] == "q")
             {
                 hidden = true;
-                commandProcessed = true;
+                command.processed = true;
             }
         }
+    }
+
+    if (!(command.processed || command.args.empty()))
+    {
+        output.emplace_back(fmt::format("No such command \"{}\".", command.input));
+        command.processed = true;
     }
 
     // Remove oldest output when exceeding max.
@@ -229,12 +239,21 @@ void DebugConsole::inputCharacter(int codePoint)
 
 void DebugConsole::runCommand(std::string commandString)
 {
-    commandString = strutil::to_lower(commandString);
-    strutil::trim(commandString);
+    // Save raw command input string.
+    command.input = commandString;
 
-    command = strutil::split(commandString, ' ');;
+    // Make command string lowercase and trim whitespace.
+    std::transform(commandString.begin(), commandString.end(), commandString.begin(), [](unsigned char c){return std::tolower(c);});
+    trim(commandString);
+
+    // Split command into a vector.
+    std::stringstream ss(commandString);
+    std::istream_iterator<std::string> begin(ss);
+    std::istream_iterator<std::string> end;
+    command.args = std::vector<std::string>(begin, end);
+
     output.emplace_back(commandString);
-    commandProcessed = false;
+    command.processed = false;
 
     input.clear();
     cursorPosition = 0;

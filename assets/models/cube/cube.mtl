@@ -12,4 +12,4 @@ newmtl cube
   map_Ka container2.png
   map_Kd container2.png
   map_Ks container2_specular.png
-  map_Ke matrix.jpg
+  Ns 64.000

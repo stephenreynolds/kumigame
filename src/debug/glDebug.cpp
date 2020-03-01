@@ -1,5 +1,5 @@
-#include "debug/glDebug.hpp"
-#include "debug/log.hpp"
+#include "glDebug.hpp"
+#include "log.hpp"
 #include <glad/glad.h>
 #include <sstream>
 

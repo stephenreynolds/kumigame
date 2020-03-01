@@ -1,6 +1,6 @@
-#include "debug/statsViewer.hpp"
-#include "debug/debugConsole.hpp"
-#include "input/keyboard.hpp"
+#include "statsViewer.hpp"
+#include "debugConsole.hpp"
+#include "../input/keyboard.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 #include <fmt/format.h>
@@ -22,7 +22,7 @@ StatsViewer::StatsViewer(std::shared_ptr<TextRenderer>& textRenderer, glm::vec2 
 
 void StatsViewer::processInput()
 {
-    if (!DebugConsole::commandProcessed)
+    if (!DebugConsole::command.processed)
     {
         if (DebugConsole::command.size() == 2)
         {
@@ -31,22 +31,26 @@ void StatsViewer::processInput()
                 if (DebugConsole::command[1] == "stats")
                 {
                     toggleHidden();
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
+                    DebugConsole::command.response = fmt::format("Toggled stats {}.", hidden ? "off" : "on");
                 }
                 else if (DebugConsole::command[1] == "line" || DebugConsole::command[1] == "wireframe")
                 {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
+                    DebugConsole::command.response = "Set fill mode to \"line\".";
                 }
                 else if (DebugConsole::command[1] == "point")
                 {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
+                    DebugConsole::command.response = "Set fill mode to \"point\".";
                 }
                 else if (DebugConsole::command[1] == "fill")
                 {
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                    DebugConsole::commandProcessed = true;
+                    DebugConsole::command.processed = true;
+                    DebugConsole::command.response = "Set fill mode to \"fill\".";
                 }
             }
         }

@@ -1,4 +1,4 @@
-#include "input/keyState.hpp"
+#include "keyState.hpp"
 
 KeyState::KeyState()
         : KeyState(-1, -1)
