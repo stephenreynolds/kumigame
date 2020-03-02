@@ -142,8 +142,6 @@ std::optional<std::string> Game::init()
 
     glfwSwapInterval(settings.vSync ? 1 : 0);
 
-    glEnable(GL_DEPTH_TEST);
-
     return {};
 }
 
@@ -157,7 +155,7 @@ std::optional<std::string> Game::loadAssets()
     auto textShader = std::make_shared<Shader>("assets/shaders/text.vert", "assets/shaders/text.frag");
     meshShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/mesh.frag");
     lampShader = std::make_shared<Shader>("assets/shaders/mesh.vert", "assets/shaders/lamp.frag");
-    LOG_INFO("Loaded shaders ({} ms).", 1000 * (glfwGetTime() - time));
+    LOG_INFO("Loaded shaders ({:.3f} ms).", 1000 * (glfwGetTime() - time));
 
     time = glfwGetTime();
     // Text renderer.
@@ -172,7 +170,7 @@ std::optional<std::string> Game::loadAssets()
     // Camera
     camera = std::make_unique<Camera>();
 
-    LOG_INFO("Loaded classes ({} ms).", 1000 * (glfwGetTime() - time));
+    LOG_INFO("Loaded classes ({:.3f} ms).", 1000 * (glfwGetTime() - time));
 
     time = glfwGetTime();
     // Load models.
@@ -189,9 +187,9 @@ std::optional<std::string> Game::loadAssets()
 
     lampMaterialIndex = cube->addMeshMaterial(0, lampMaterial);
 
-    LOG_INFO("Loaded models ({} ms).", 1000 * (glfwGetTime() - time));
+    LOG_INFO("Loaded models ({:.3f} ms).", 1000 * (glfwGetTime() - time));
 
-    LOG_INFO("Finished loading assets ({} ms).", 1000 * (glfwGetTime() - assetsTime));
+    LOG_INFO("Finished loading assets ({:.3f} ms).", 1000 * (glfwGetTime() - assetsTime));
 
     return {};
 }
@@ -363,6 +361,8 @@ void Game::draw()
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glEnable(GL_DEPTH_TEST);
+
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov),
                                             static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
     glm::mat4 view = camera->getViewMatrix();
@@ -372,24 +372,27 @@ void Game::draw()
     // Light
     lampShader->use();
 
+    glm::vec3 pointLightPositions[] = {
+        glm::vec3(0.7f, 0.2f, 2.0f),
+        glm::vec3(2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f, 2.0f, -12.0f),
+        glm::vec3(0.0f, 0.0f, -3.0f)
+    };
+
     // Light Source
-    glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
-    lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-    lightPos.y = (sin(glfwGetTime()) / 2.0f) * 1.0f;
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-    lampShader->setMatrix4("Model", model);
-    lampShader->setMatrix4("View", view);
-    lampShader->setMatrix4("Projection", projection);
-    cube->render(lampShader, lampMaterialIndex);
+    lampShader->setMatrix4("ViewProjection", projection * view);
+    for (auto pos : pointLightPositions)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pos);
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        lampShader->setMatrix4("Model", model);
+        lampShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
+        cube->render(lampShader, lampMaterialIndex);
+    }
 
     // Meshes
     meshShader->use();
-    meshShader->setVector3f("Light.position", lightPos); // Lighting done in view space.
-    meshShader->setVector3f("Light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-    meshShader->setVector3f("Light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-    meshShader->setVector3f("Light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
     glm::vec3 cubePositions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -407,7 +410,55 @@ void Game::draw()
     // Cube
     meshShader->setMatrix4("ViewProjection", projection * view);
     meshShader->setVector3f("ViewPos", camera->position);
-    meshShader->setVector3f("Light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+
+    meshShader->setVector3f("DirLight.direction", -0.2f, -1.0f, -0.3f);
+    meshShader->setVector3f("DirLight.ambient", 0.05f, 0.05f, 0.05f);
+    meshShader->setVector3f("DirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    meshShader->setVector3f("DirLight.specular", 0.5f, 0.5f, 0.5f);
+    // point light 1
+    meshShader->setVector3f("PointLight[0].position", pointLightPositions[0]);
+    meshShader->setVector3f("PointLight[0].ambient", 0.05f, 0.05f, 0.05f);
+    meshShader->setVector3f("PointLight[0].diffuse", 0.8f, 0.8f, 0.8f);
+    meshShader->setVector3f("PointLight[0].specular", 1.0f, 1.0f, 1.0f);
+    meshShader->setFloat("PointLight[0].constant", 1.0f);
+    meshShader->setFloat("PointLight[0].linear", 0.09);
+    meshShader->setFloat("PointLight[0].quadratic", 0.032);
+    // point light 2
+    meshShader->setVector3f("PointLight[1].position", pointLightPositions[1]);
+    meshShader->setVector3f("PointLight[1].ambient", 0.05f, 0.05f, 0.05f);
+    meshShader->setVector3f("PointLight[1].diffuse", 0.8f, 0.8f, 0.8f);
+    meshShader->setVector3f("PointLight[1].specular", 1.0f, 1.0f, 1.0f);
+    meshShader->setFloat("PointLight[1].constant", 1.0f);
+    meshShader->setFloat("PointLight[1].linear", 0.09);
+    meshShader->setFloat("PointLight[1].quadratic", 0.032);
+    // point light 3
+    meshShader->setVector3f("PointLight[2].position", pointLightPositions[2]);
+    meshShader->setVector3f("PointLight[2].ambient", 0.05f, 0.05f, 0.05f);
+    meshShader->setVector3f("PointLight[2].diffuse", 0.8f, 0.8f, 0.8f);
+    meshShader->setVector3f("PointLight[2].specular", 1.0f, 1.0f, 1.0f);
+    meshShader->setFloat("PointLight[2].constant", 1.0f);
+    meshShader->setFloat("PointLight[2].linear", 0.09);
+    meshShader->setFloat("PointLight[2].quadratic", 0.032);
+    // point light 4
+    meshShader->setVector3f("PointLight[3].position", pointLightPositions[3]);
+    meshShader->setVector3f("PointLight[3].ambient", 0.05f, 0.05f, 0.05f);
+    meshShader->setVector3f("PointLight[3].diffuse", 0.8f, 0.8f, 0.8f);
+    meshShader->setVector3f("PointLight[3].specular", 1.0f, 1.0f, 1.0f);
+    meshShader->setFloat("PointLight[3].constant", 1.0f);
+    meshShader->setFloat("PointLight[3].linear", 0.09);
+    meshShader->setFloat("PointLight[3].quadratic", 0.032);
+    // spotLight
+    meshShader->setVector3f("SpotLight.position", camera->position);
+    meshShader->setVector3f("SpotLight.direction", camera->front);
+    meshShader->setVector3f("SpotLight.ambient", 0.0f, 0.0f, 0.0f);
+    meshShader->setVector3f("SpotLight.diffuse", 1.0f, 1.0f, 1.0f);
+    meshShader->setVector3f("SpotLight.specular", 1.0f, 1.0f, 1.0f);
+    meshShader->setFloat("SpotLight.constant", 1.0f);
+    meshShader->setFloat("SpotLight.linear", 0.09);
+    meshShader->setFloat("SpotLight.quadratic", 0.032);
+    meshShader->setFloat("SpotLight.cutOff", glm::cos(glm::radians(12.5f)));
+    meshShader->setFloat("SpotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
     for (unsigned int i = 0; i < 10; ++i)
     {
         model = glm::mat4(1.0f);
