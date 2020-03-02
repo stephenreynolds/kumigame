@@ -29,7 +29,7 @@ add_executable(kumigame
     src/debug/statsViewer.cpp
     src/input/keyState.cpp
     src/input/keyboard.cpp
-    src/renderer/material.cpp
+    src/renderer/texture.cpp
     src/renderer/mesh.cpp
     src/renderer/model.cpp
     src/renderer/shader.cpp
