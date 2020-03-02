@@ -243,14 +243,11 @@ void DebugConsole::runCommand(std::string commandString)
     command.input = commandString;
 
     // Make command string lowercase and trim whitespace.
-    std::transform(commandString.begin(), commandString.end(), commandString.begin(), [](unsigned char c){return std::tolower(c);});
+    toLower(commandString);
     trim(commandString);
 
     // Split command into a vector.
-    std::stringstream ss(commandString);
-    std::istream_iterator<std::string> begin(ss);
-    std::istream_iterator<std::string> end;
-    command.args = std::vector<std::string>(begin, end);
+    command.args = split(commandString);
 
     output.emplace_back(commandString);
     command.processed = false;
