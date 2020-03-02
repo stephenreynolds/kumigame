@@ -8,14 +8,14 @@ in vec3 fragPos;
 
 uniform vec3 ViewPos;
 
-uniform struct MATERIAL
+uniform struct sMaterial
 {
     sampler2D diffuse;
     sampler2D specular;
     float shininess;
 } Material;
 
-uniform struct DIR_LIGHT
+uniform struct sDirLight
 {
     vec3 direction;
     vec3 ambient;
@@ -24,7 +24,7 @@ uniform struct DIR_LIGHT
 } DirLight;
 
 #define NUM_POINT_LIGHTS 4
-uniform struct POINT_LIGHT
+uniform struct sPointLight
 {
     vec3 position;
     float constant;
@@ -35,7 +35,7 @@ uniform struct POINT_LIGHT
     vec3 specular;
 } PointLight[NUM_POINT_LIGHTS];
 
-uniform struct SPOT_LIGHT
+uniform struct sSpotLight
 {
     vec3 position;
     vec3 direction;
@@ -49,9 +49,9 @@ uniform struct SPOT_LIGHT
     vec3 specular;
 } SpotLight;
 
-vec3 calcDirLight(DIR_LIGHT light, vec3 normal, vec3 viewDir);
-vec3 calcPointLight(POINT_LIGHT light, vec3 normal, vec3 fragPos, vec3 viewDir);
-vec3 calcSpotLight(SPOT_LIGHT light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 calcDirLight(sDirLight light, vec3 normal, vec3 viewDir);
+vec3 calcPointLight(sPointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec3 calcSpotLight(sSpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main()
 {
@@ -73,7 +73,7 @@ void main()
     FragColor = vec4(result, 1.0);
 }
 
-vec3 calcDirLight(DIR_LIGHT light, vec3 normal, vec3 viewDir)
+vec3 calcDirLight(sDirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDir = normalize(-light.direction);
 
@@ -92,7 +92,7 @@ vec3 calcDirLight(DIR_LIGHT light, vec3 normal, vec3 viewDir)
     return ambient + diffuse + specular;
 }
 
-vec3 calcPointLight(POINT_LIGHT light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 calcPointLight(sPointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
 
@@ -118,7 +118,7 @@ vec3 calcPointLight(POINT_LIGHT light, vec3 normal, vec3 fragPos, vec3 viewDir)
     return ambient + diffuse + specular;
 }
 
-vec3 calcSpotLight(SPOT_LIGHT light, vec3 normal, vec3 fragPos, vec3 viewDir)
+vec3 calcSpotLight(sSpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
 
