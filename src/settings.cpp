@@ -5,6 +5,7 @@
 #include <limits>
 #include <string>
 
+// TODO: Add more checks for valid settings.
 void readSettings(Settings &settings, const char *filepath)
 {
     try
@@ -13,16 +14,17 @@ void readSettings(Settings &settings, const char *filepath)
 
         // [graphics.display]
         auto graphicsDisplay = toml::find(settings.file, "graphics", "display");
-        settings.width = toml::find<int>(graphicsDisplay, "width");
-        settings.height = toml::find<int>(graphicsDisplay, "height");
-        settings.fullscreen = toml::find<bool>(graphicsDisplay, "fullscreen");
-        settings.vSync = toml::find<bool>(graphicsDisplay, "vSync");
-        settings.fov = toml::find<float>(graphicsDisplay, "fov");
+        settings.width = toml::find_or<int>(graphicsDisplay, "width", static_cast<int>(settings.width));
+        settings.height = toml::find_or<int>(graphicsDisplay, "height", static_cast<int>(settings.height));
+        settings.fullscreen = toml::find_or<bool>(graphicsDisplay, "fullscreen", settings.fullscreen);
+        settings.vSync = toml::find_or<bool>(graphicsDisplay, "vSync", settings.vSync);
+        settings.fov = toml::find_or<float>(graphicsDisplay, "fov", static_cast<float>(settings.fov));
+        settings.superSampling = toml::find_or<int>(graphicsDisplay, "superSampling", static_cast<int>(settings.superSampling));
 
         // [log.level]
         auto logLevel = toml::find(settings.file, "log", "level");
-        int consoleLevel = toml::find<int>(logLevel, "console");
-        int fileLevel = toml::find<int>(logLevel, "file");
+        int consoleLevel = toml::find_or<int>(logLevel, "console", settings.consoleLogLevel);
+        int fileLevel = toml::find_or<int>(logLevel, "file", settings.fileLogLevel);
 
         if (consoleLevel < 0 || consoleLevel > 6)
         {
