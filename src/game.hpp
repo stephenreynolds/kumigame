@@ -34,11 +34,17 @@ private:
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<DebugConsole> debugConsole;
     std::unique_ptr<StatsViewer> statsViewer;
+    std::shared_ptr<Shader> screenShader;
     std::shared_ptr<Shader> meshShader;
     std::shared_ptr<Shader> lampShader;
     std::unique_ptr<Model> nanosuit;
     std::unique_ptr<Model> cube;
     size_t lampMaterialIndex = 0;
+    unsigned int fbo;
+    unsigned int rbo;
+    unsigned int texColorBuffer;
+    unsigned int quadVAO;
+    unsigned int quadVBO;
 
     std::optional<std::string> init();
     std::optional<std::string> loadAssets();
