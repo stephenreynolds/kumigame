@@ -18,6 +18,7 @@ struct Character
     FT_Pos advance;
 };
 
+// TODO: Store glyphs in one texture and render in one draw call.
 class TextRenderer
 {
 public:
