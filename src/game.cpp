@@ -56,7 +56,7 @@ std::optional<std::string> Game::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // TODO: Only works on Windows and X11. Find better solution.
+    //glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); // TODO: Only works on Windows and X11. Find better solution.
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -82,6 +82,11 @@ std::optional<std::string> Game::init()
     // Save window position and size.
     glfwGetWindowPos(window, &windowPos.x, &windowPos.y);
     glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
+    renderSize = glm::ivec2(windowSize.x * settings.superSampling, windowSize.y * settings.superSampling);
+
+    // Get window content scale;
+    float xScale, yScale;
+    glfwGetWindowContentScale(window, &xScale, &yScale);
 
     // Set window icon.
     int width, height, numComponents;
@@ -111,8 +116,19 @@ std::optional<std::string> Game::init()
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, int width, int height) {
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
+        auto game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+        game->windowSize = { width, height };
+        game->renderSize = {
+            width * static_cast<int>(game->settings.superSampling),
+            height * static_cast<int>(game->settings.superSampling)
+        };
+    });
+
+    glfwSetWindowPosCallback(window, [](GLFWwindow* window, int xPos, int yPos) {
+        auto game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+        game->windowPos = { xPos, yPos };
     });
 
     glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xPos, double yPos) {
@@ -187,18 +203,16 @@ std::optional<std::string> Game::loadAssets()
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    const int renderWidth = settings.width * settings.superSampling;
-    const int renderHeight = settings.height * settings.superSampling;
     glGenTextures(1, &texColorBuffer);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderWidth, renderHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderSize.x, renderSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, renderWidth, renderHeight);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, renderSize.x, renderSize.y);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -269,6 +283,7 @@ void Game::processInput(float deltaTime)
         {
             if (DebugConsole::command[0] == "set")
             {
+                // TODO: Support windowed fullscreen.
                 if (DebugConsole::command[1] == "fullscreen")
                 {
                     if (DebugConsole::command[2] == "true")
@@ -307,17 +322,38 @@ void Game::processInput(float deltaTime)
                 }
                 else if (DebugConsole::command[1] == "vsync")
                 {
-                    if (DebugConsole::command[2] == "true")
+                    if (DebugConsole::command[2] == "true" || DebugConsole::command[2] == "on")
                     {
                         glfwSwapInterval(1);
                         settings.vSync = true;
                         DebugConsole::command.response = "Vertical sync enabled.";
                     }
-                    else if (DebugConsole::command[2] == "false")
+                    else if (DebugConsole::command[2] == "false" || DebugConsole::command[2] == "off")
                     {
                         glfwSwapInterval(0);
                         settings.vSync = false;
                         DebugConsole::command.response = "Vertical sync disabled.";
+                    }
+                    else
+                    {
+                        DebugConsole::command.response = "Invalid argument: must be of type bool.";
+                    }
+
+                    DebugConsole::command.processed = true;
+                }
+                else if (DebugConsole::command[1] == "supersampling")
+                {
+                    try
+                    {
+                        settings.superSampling = std::stof(DebugConsole::command[2]);
+                        renderSize = {
+                            windowSize.x * settings.superSampling,
+                            windowSize.y * settings.superSampling
+                        };
+                    }
+                    catch (std::invalid_argument& ex)
+                    {
+                        DebugConsole::command.response = "Invalid argument: must be of type float.";
                     }
 
                     DebugConsole::command.processed = true;
@@ -413,7 +449,7 @@ void Game::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera->fov),
-                                            static_cast<float>(windowSize.x) / static_cast<float>(windowSize.y), 0.1f, 100.0f);
+                                            static_cast<float>(renderSize.x) / static_cast<float>(renderSize.y), 0.1f, 100.0f);
     glm::mat4 view = camera->getViewMatrix();
 
     glm::mat4 model;
@@ -527,9 +563,6 @@ void Game::draw()
     meshShader->setMatrix3("Normal", glm::mat3(glm::transpose(glm::inverse(model))));
     nanosuit->render(meshShader);
 
-    statsViewer->render(VERSION.toLongString(), windowSize, windowSize * settings.superSampling);
-    debugConsole->render(glm::vec3(1.0f));
-
     // Second pass
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
@@ -539,6 +572,9 @@ void Game::draw()
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowSize.x, windowSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    statsViewer->render(VERSION.toLongString(), windowSize, renderSize, settings.superSampling);
+    debugConsole->render(glm::vec3(1.0f));
 
     glfwSwapBuffers(window);
 }

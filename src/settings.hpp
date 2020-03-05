@@ -14,7 +14,7 @@ struct Settings
     bool fullscreen = false;
     bool vSync = false;
     float fov = 80.0f;
-    int superSampling = 1;
+    float superSampling = 1.0f;
 
     // Log
     spdlog::level::level_enum consoleLogLevel = spdlog::level::critical;

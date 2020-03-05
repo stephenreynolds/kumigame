@@ -19,7 +19,7 @@ void readSettings(Settings &settings, const char *filepath)
         settings.fullscreen = toml::find_or<bool>(graphicsDisplay, "fullscreen", settings.fullscreen);
         settings.vSync = toml::find_or<bool>(graphicsDisplay, "vSync", settings.vSync);
         settings.fov = toml::find_or<float>(graphicsDisplay, "fov", static_cast<float>(settings.fov));
-        settings.superSampling = toml::find_or<int>(graphicsDisplay, "superSampling", static_cast<int>(settings.superSampling));
+        settings.superSampling = toml::find_or<float>(graphicsDisplay, "superSampling", static_cast<float>(settings.superSampling));
 
         // [log.level]
         auto logLevel = toml::find(settings.file, "log", "level");

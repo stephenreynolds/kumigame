@@ -30,6 +30,7 @@ private:
     GLFWwindow* window = nullptr;
     glm::ivec2 windowPos{};
     glm::ivec2 windowSize{};
+    glm::ivec2 renderSize{};
     std::unique_ptr<Camera> camera;
     std::shared_ptr<TextRenderer> textRenderer;
     std::unique_ptr<DebugConsole> debugConsole;
