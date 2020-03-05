@@ -141,8 +141,10 @@ void DebugConsole::update()
     }
 
     // Remove oldest output when exceeding max.
+    // TODO: Determine MAX_OUTPUT_SIZE based on height of line and height of viewport.
     if (output.size() > MAX_OUTPUT_SIZE)
     {
+        output.erase(output.begin(), output.end() - MAX_OUTPUT_SIZE);
         output.pop_front();
     }
 }
