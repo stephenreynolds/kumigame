@@ -57,7 +57,14 @@ target_link_libraries(kumigame
 file(GLOB_RECURSE assets RELATIVE ${CMAKE_SOURCE_DIR}/assets CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/assets/*)
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
-# Copy settings file to build directory
+# Create settings.toml from sample if it does not already exist.
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/settings.toml)
+    add_custom_command(TARGET kumigame
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/settings.toml.sample ${CMAKE_SOURCE_DIR}/settings.toml)
+endif()
+
+# Copy settings file to build directory.
 add_custom_command(TARGET kumigame
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_SOURCE_DIR}/settings.toml ${CMAKE_BINARY_DIR}/bin)
