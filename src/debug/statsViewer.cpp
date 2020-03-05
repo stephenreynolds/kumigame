@@ -94,7 +94,7 @@ void StatsViewer::render(const std::string& version, glm::ivec2 windowSize, glm:
 
         // Draw version.
         out = fmt::format("{}\nOpenGL {}.{}", version, GLVersion.major, GLVersion.minor);
-        renderer->render(out, glm::vec2(1440 - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f), true);
+        renderer->render(out, glm::vec2(windowSize.x - 20, 20), 1.0f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f), true);
 
         glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
         glEnable(GL_DEPTH_TEST); // Restore depth testing.
