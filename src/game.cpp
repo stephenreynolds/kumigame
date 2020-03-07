@@ -564,6 +564,7 @@ void Game::draw()
     nanosuit->render(meshShader);
 
     // Second pass
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     screenShader->use();

@@ -136,16 +136,34 @@ void TextRenderer::render(std::string text, glm::vec2 position, GLfloat scale, g
     }
     else
     {
-        for (auto c = text.begin(); c != text.end(); ++c)
+        size_t size = text.size();
+        for (size_t i = 0; i < size; ++i)
         {
-            Character ch = characters[*c];
+            char c = text[i];
+            Character ch = characters[c];
 
-            if (*c == '\n')
+            if (c == '\n')
             {
                 position.x = xStart;
                 position.y += lineHeight * scale * 2.0f;
                 continue;
             }
+            else if (c == '\t')
+            {
+                continue;
+            }
+//            else if (c == '\t')
+//            {
+//                size_t next = (i + 3) & ~0x03;
+//                if (i % 4 == 0)
+//                {
+//                    next += 4;
+//                }
+//                size_t count = next - i;
+//                text.insert(i + 1, count, ' ');
+//                size += count;
+//                continue;
+//            }
 
             GLfloat xpos = position.x + ch.bearing.x * scale;
             GLfloat ypos = position.y + static_cast<float>(lineHeight - ch.bearing.y) * scale;

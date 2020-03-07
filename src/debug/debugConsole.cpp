@@ -85,6 +85,12 @@ DebugConsole::DebugConsole(std::shared_ptr<TextRenderer> &textRenderer, glm::vec
             inputCharacter(codePoint);
         }, codePoint);
     }
+    Keyboard::addKeyBinding([this](){
+        inputCharacter('\t');
+    }, GLFW_KEY_TAB, GLFW_PRESS);
+    Keyboard::addKeyBinding([this](){
+        inputCharacter('\t');
+    }, GLFW_KEY_TAB, GLFW_REPEAT);
 }
 
 void DebugConsole::update()
@@ -119,6 +125,8 @@ void DebugConsole::update()
                 output.emplace_back(columnString("set vsync [bool]", "Turn vSync on or off.", width));
                 output.emplace_back(columnString("set fov [fov:float]", "Set player's field-of-view.", width));
                 output.emplace_back(columnString("Page 1/1", "", width));
+                output.emplace_back("Testing:\tTest");
+                output.emplace_back("The fox\tis red.");
                 command.processed = true;
             }
             else if (command[0] == "clear")
@@ -160,7 +168,7 @@ void DebugConsole::render(glm::vec3 textColor)
         glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        auto inputPrint = fmt::format(">{}", input);
+        std::string inputPrint = fmt::format(">{}", input);
 
         if (cursorPosition > inputPrint.length() - 1)
         {
@@ -175,6 +183,21 @@ void DebugConsole::render(glm::vec3 textColor)
         {
             auto index = output.size() - 1 - i;
             auto outputPrint = fmt::format(">{}", output[index]);
+            size_t size = outputPrint.size();
+            for (size_t i = 0; i < size; ++i)
+            {
+                if (outputPrint[i] == '\t')
+                {
+                    size_t next = (i + 3) & ~0x03;
+                    if (i % 4 == 0)
+                    {
+                        next += 4;
+                    }
+                    size_t count = next - i;
+                    outputPrint.insert(i + 1, count, ' ');
+                    size += count;
+                }
+            }
             textRenderer->render(outputPrint, position - glm::vec2(0.0f, static_cast<float>(i + 1) * 20.0f),
                 1.0f, glm::vec4(textColor, 0.5f));
         }
@@ -192,8 +215,16 @@ void DebugConsole::backSpace()
     {
         if (cursorPosition > 0)
         {
-            input.erase(cursorPosition - 1, 1);
-            cursorPosition--;
+            if (input.at(cursorPosition - 5) == '\t')
+            {
+                input.erase(cursorPosition - 5, 5);
+                cursorPosition -= 4;
+            }
+            else
+            {
+                input.erase(cursorPosition - 1, 1);
+                cursorPosition--;
+            }
         }
     }
 }
@@ -233,6 +264,23 @@ void DebugConsole::inputCharacter(int codePoint)
         else
         {
             input.insert(cursorPosition, 1, static_cast<char>(codePoint));
+        }
+
+        size_t size = input.size();
+        for (size_t i = 0; i < size; ++i)
+        {
+            if (input[i] == '\t')
+            {
+                size_t next = (i + 3) & ~0x03;
+                if (i % 4 == 0 || i == 0)
+                {
+                    next += 4;
+                }
+                size_t count = next - i;
+                input.insert(i + 1, count, ' ');
+                size += count;
+                cursorPosition += count - 1;
+            }
         }
 
         cursorPosition++;
