@@ -125,8 +125,6 @@ void DebugConsole::update()
                 output.emplace_back(columnString("set vsync [bool]", "Turn vSync on or off.", width));
                 output.emplace_back(columnString("set fov [fov:float]", "Set player's field-of-view.", width));
                 output.emplace_back(columnString("Page 1/1", "", width));
-                output.emplace_back("Testing:\tTest");
-                output.emplace_back("The fox\tis red.");
                 command.processed = true;
             }
             else if (command[0] == "clear")
