@@ -33,7 +33,7 @@ add_executable(kumigame
     src/renderer/mesh.cpp
     src/renderer/model.cpp
     src/renderer/shader.cpp
-    src/renderer/textRenderer.cpp)
+    src/renderer/textRenderer.cpp src/renderer/postProcess.hpp)
 
 target_compile_definitions(kumigame PUBLIC
     -DRELEASE_TYPE="internal"

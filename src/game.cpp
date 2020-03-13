@@ -3,6 +3,7 @@
 #include "debug/log.hpp"
 #include "input/keyboard.hpp"
 #include "renderer/material.hpp"
+#include "renderer/postProcess.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -208,6 +209,8 @@ std::optional<std::string> Game::loadAssets()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderSize.x, renderSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
     glGenRenderbuffers(1, &rbo);
@@ -568,6 +571,26 @@ void Game::draw()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     screenShader->use();
+    screenShader->setInteger("PostProcess.operation", PostProcess::Blur);
+    float offset = 1.0f / 300.0f;
+    glm::vec2 offsets[9] = {
+        { -offset,  offset  },  // top-left
+        {  0.0f,    offset  },  // top-center
+        {  offset,  offset  },  // top-right
+        { -offset,  0.0f    },  // center-left
+        {  0.0f,    0.0f    },  // center-center
+        {  offset,  0.0f    },  // center - right
+        { -offset, -offset  },  // bottom-left
+        {  0.0f,   -offset  },  // bottom-center
+        {  offset, -offset  }   // bottom-right
+    };
+    screenShader->setVector2Array("PostProcess.offsets", 9, offsets);
+    float blurKernel[9] = {
+        1.0 / 16, 2.0 / 16, 1.0 / 16,
+        2.0 / 16, 4.0 / 16, 2.0 / 16,
+        1.0 / 16, 2.0 / 16, 1.0 / 16
+    };
+    screenShader->setFloatArray("PostProcess.kernel", 9, blurKernel);
     glBindVertexArray(quadVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
