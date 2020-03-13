@@ -84,7 +84,7 @@ void StatsViewer::render(const std::string& version, glm::ivec2 windowSize, glm:
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw FPS and ms/frame.
-        auto out = fmt::format("{0:.0f} ({1:.2f}ms)\n{2}\nWindow: {3}x{4}\nRendering: {5}x{6} ({7:.1}x)",
+        auto out = fmt::format("{0:.0f} ({1:.2f}ms)\n{2}\nWindow: {3}x{4}\nRendering: {5}x{6} ({7}x)",
                                fps, ms,
                                glGetString(GL_RENDERER),
                                windowSize.x, windowSize.y,
