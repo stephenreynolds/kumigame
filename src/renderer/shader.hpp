@@ -19,9 +19,11 @@ public:
     int getUniformLocation(const GLchar *name);
 
     void setFloat(const GLchar* name, GLfloat value);
+    void setFloatArray(const GLchar* name, GLuint count, const float* value);
     void setInteger(const GLchar* name, GLint value);
     void setVector2f(const GLchar* name, GLfloat x, GLfloat y);
     void setVector2f(const GLchar* name, const glm::vec2& value);
+    void setVector2Array(const GLchar* name, GLuint count, const glm::vec2* value);
     void setVector3f(const GLchar* name, GLfloat x, GLfloat y, GLfloat z);
     void setVector3f(const GLchar* name, const glm::vec3& value);
     void setVector4f(const GLchar* name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);

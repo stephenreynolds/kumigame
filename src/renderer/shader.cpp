@@ -26,6 +26,10 @@ void Shader::setFloat(const GLchar* name, GLfloat value)
 {
     glUniform1f(glGetUniformLocation(id, name), value);
 }
+void Shader::setFloatArray(const GLchar* name, GLuint count, const float* value)
+{
+    glUniform1fv(glGetUniformLocation(id, name), count, value);
+}
 
 void Shader::setInteger(const GLchar* name, GLint value)
 {
@@ -40,6 +44,11 @@ void Shader::setVector2f(const GLchar* name, GLfloat x, GLfloat y)
 void Shader::setVector2f(const GLchar* name, const glm::vec2& value)
 {
     glUniform2f(glGetUniformLocation(id, name), value.x, value.y);
+}
+
+void Shader::setVector2Array(const GLchar* name, GLuint count, const glm::vec2* value)
+{
+    glUniform2fv(glGetUniformLocation(id, name), count, (GLfloat*)value);
 }
 
 void Shader::setVector3f(const GLchar* name, GLfloat x, GLfloat y, GLfloat z)
